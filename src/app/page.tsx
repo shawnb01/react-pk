@@ -1,143 +1,151 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import * as Jobs from "@/baseData/jobs";
+import { Jobs } from "@/baseData/jobs";
+import { useState } from "react";
+import JobTable from "./_components/jobsTable";
+import Coins from "./_components/coins";
+import { Skills } from "@/baseData/skills";
+import SkillsTable from "./_components/skillsTable";
 
 export default function HomePage() {
-  const days = 185 + 365 * 18;
+  const [gameData, setGameData] = useState({
+    taskData: {},
+    itemData: {},
+    coins: 110,
+    days: 365 * 14,
+    evil: 0,
+    paused: false,
+    timeWarpingEnabled: true,
+    rebirthOneCount: 0,
+    rebirthTwoCount: 0,
+    currentJob: null,
+    currentSkill: null,
+    currentProperty: null,
+    currentMisc: null,
+  });
+  const [currentSkill, setCurrentSkill] = useState(
+    gameData.currentSkill || "Concentration",
+  );
+  const [currentJob, setCurrentJob] = useState(gameData.currentJob || "Beggar");
+  const [jobsData, setJobsData] = useState(Jobs);
+  const [skillsData, setSkillsData] = useState(Skills);
+
+  function updateGameData(newData: any) {
+    setGameData({ ...gameData, ...newData });
+  }
+
+  function updateCurrentJob(job: string) {
+    setCurrentJob(job);
+  }
+
+  function updateCurrentSkill(skill: string) {
+    setCurrentSkill(skill);
+  }
 
   return (
     <main className="flex gap-4">
-      <aside className="bg-secondary text-foreground flex max-h-[480px] w-72 flex-grow-0 flex-col gap-4 p-3">
+      <aside className="flex max-h-[480px] w-72 flex-shrink-0 flex-col gap-4 bg-secondary p-3 text-foreground">
         <div className="flex flex-col">
-          <span className="text-xl">{`Age: ${Math.floor(days / 365)} | Day: ${days % 365}`}</span>
-          <span className="text-muted-foreground text-sm">
+          <span className="text-xl">{`Age: ${Math.floor(gameData.days / 365)} | Day: ${gameData.days % 365}`}</span>
+          <span className="text-sm text-muted-foreground">
             Lifespan: 70 years
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant={"default"}>Play/Pause</Button>
+          <Button
+            variant={"default"}
+            onClick={() => {
+              updateGameData({ paused: !gameData.paused });
+            }}
+          >
+            {gameData.paused ? "Play" : "Pause"}
+          </Button>
           <div className="flex flex-col">
             <span>Auto-Promote</span>
             <span>Auto-Learn</span>
           </div>
         </div>
         <div className="flex flex-col">
-          <span>
-            <span className="text-cyan-400">0p</span>
-            <span className="text-amber-600">0g</span>
-            <span className="text-gray-400">0s</span>
-            <span className="text-yellow-800">0c</span>
-          </span>
-          <span className="text-muted-foreground text-sm">
+          <Coins coins={gameData.coins} />
+          <span className="text-sm text-muted-foreground">
             Balance (in coins)
           </span>
         </div>
         <div className="flex flex-col">
-          <span>Net/day: 0c</span>
-          <span>Income/day: 0c</span>
-          <span>Expenses/day: 0c</span>
+          <span>
+            Net/day: <Coins coins={0} />
+          </span>
+          <span>
+            Income/day: <Coins coins={0} />
+          </span>
+          <span>
+            Expenses/day: <Coins coins={0} />
+          </span>
         </div>
-        <div className="flex flex-col">
-          <span>Current Job</span>
-          <span>Current Skill</span>
+        <div className="flex flex-col gap-2">
+          <div>
+            <div className="relative w-[200px] bg-blue-700">
+              <div
+                className="h-[30px] bg-yellow-500"
+                // style={{ width: `${(currentXp / xpLeft) * 100}%` }}
+                style={{ width: "50%" }}
+              >
+                <div className="absolute bottom-0 top-0 p-[5px]">
+                  {currentJob}
+                </div>
+              </div>
+            </div>
+            <span className="text-sm text-muted-foreground">Current Job</span>
+          </div>
+          <div>
+            <div className="relative w-[200px] bg-blue-700">
+              <div
+                className="h-[30px] bg-yellow-500"
+                // style={{ width: `${(currentXp / xpLeft) * 100}%` }}
+                style={{ width: "33%" }}
+              >
+                <div className="absolute bottom-0 top-0 p-[5px]">
+                  {currentSkill}
+                </div>
+              </div>
+            </div>
+            <span className="text-sm text-muted-foreground">Current Skill</span>
+          </div>
         </div>
         <div className="flex flex-col">
           <span>Happiness: 1.0</span>
-          <span className="text-muted-foreground text-sm">
+          <span className="text-sm text-muted-foreground">
             Affects all xp gains
           </span>
         </div>
       </aside>
       <section className="flex flex-col">
-        <Tabs defaultValue="jobs" className="w-full">
-          <TabsList>
+        <Tabs defaultValue="jobs" className="w-[900px]">
+          <TabsList className="flex justify-start">
             <TabsTrigger value="jobs">Jobs</TabsTrigger>
             <TabsTrigger value="skills">Skills</TabsTrigger>
             <TabsTrigger value="shop">Shop</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
+            <TabsTrigger value="settings" className="">
+              Settings
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="jobs">
-            <Table>
-              <TableHeader className="bg-green-800">
-                <TableRow>
-                  <TableHead className="w-[250px]">Common Work</TableHead>
-                  <TableHead>Level</TableHead>
-                  <TableHead>Income/Day</TableHead>
-                  <TableHead>XP/Day</TableHead>
-                  <TableHead>XP Left</TableHead>
-                  <TableHead>Max Level</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {Jobs.CommonWork.map((job) => (
-                  <TableRow>
-                    <TableCell>{job.name}</TableCell>
-                    <TableCell>0</TableCell>
-                    <TableCell>{job.income}</TableCell>
-                    <TableCell>0</TableCell>
-                    <TableCell>{job.maxXp}</TableCell>
-                    <TableCell>0</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-              <TableHeader className="bg-red-800">
-                <TableRow>
-                  <TableHead className="w-[250px]">Military</TableHead>
-                  <TableHead>Level</TableHead>
-                  <TableHead>Income/Day</TableHead>
-                  <TableHead>XP/Day</TableHead>
-                  <TableHead>XP Left</TableHead>
-                  <TableHead>Max Level</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {Jobs.Military.map((job) => (
-                  <TableRow>
-                    <TableCell>{job.name}</TableCell>
-                    <TableCell>0</TableCell>
-                    <TableCell>{job.income}</TableCell>
-                    <TableCell>0</TableCell>
-                    <TableCell>{job.maxXp}</TableCell>
-                    <TableCell>0</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-              <TableHeader className="bg-purple-800">
-                <TableRow>
-                  <TableHead className="w-[250px]">
-                    The Arcane Association
-                  </TableHead>
-                  <TableHead>Level</TableHead>
-                  <TableHead>Income/Day</TableHead>
-                  <TableHead>XP/Day</TableHead>
-                  <TableHead>XP Left</TableHead>
-                  <TableHead>Max Level</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {Jobs.TheArcaneAssociation.map((job) => (
-                  <TableRow>
-                    <TableCell>{job.name}</TableCell>
-                    <TableCell>0</TableCell>
-                    <TableCell>{job.income}</TableCell>
-                    <TableCell>0</TableCell>
-                    <TableCell>{job.maxXp}</TableCell>
-                    <TableCell>0</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <JobTable
+              jobsData={jobsData}
+              currentJob={currentJob}
+              updateCurrentJob={updateCurrentJob}
+              rebirthOne={gameData.rebirthOneCount}
+            />
           </TabsContent>
           <TabsContent value="skills">
-            Display all available skills here.
+            <SkillsTable
+              skillsData={skillsData}
+              currentSkill={currentSkill}
+              updateCurrentSkill={updateCurrentSkill}
+              rebirthOne={gameData.rebirthOneCount}
+            />
           </TabsContent>
           <TabsContent value="shop">
             Display all available items in the shop.
