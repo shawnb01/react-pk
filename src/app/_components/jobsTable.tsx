@@ -9,7 +9,17 @@ import {
 import Coins from "./coins";
 import { formatBigNumber } from "@/lib/utils";
 import React from "react";
-import { Job, jobCategories, headerRowColors } from "@/baseData/basedata";
+import {
+  Job,
+  jobCategories,
+  headerRowColors,
+  tooltips,
+} from "@/baseData/basedata";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 function JobHeader(props: {
   title: string;
@@ -41,28 +51,44 @@ function JobRow(props: {
   income: number;
   xpGain: number;
   xpLeft: number;
+  tooltip: string;
   updateCurrentJob: (cI: number, jI: number) => void;
   rebirthOne: number;
 }) {
   const currentXp = 0;
-  const { jobData, updateCurrentJob, current, income, xpGain, xpLeft } = props;
+  const {
+    jobData,
+    updateCurrentJob,
+    current,
+    income,
+    xpGain,
+    xpLeft,
+    tooltip,
+  } = props;
   const { name, maxLevel } = jobData;
   return (
     <TableRow key={name}>
       <TableCell>
-        <div
-          className="relative w-[200px] cursor-pointer bg-blue-700"
-          onClick={() => {
-            // updateCurrentJob(props.catergory, props.row);
-          }}
-        >
-          <div
-            className={`h-[30px] ${current === name ? "bg-yellow-500" : "bg-blue-600"}`}
-            // style={{ width: `${(currentXp / xpLeft) * 100}%` }}
-            style={{ width: "50%" }}
-          ></div>
-          <div className="absolute bottom-0 top-0 p-[5px]">{name}</div>
-        </div>
+        <Tooltip>
+          <TooltipTrigger>
+            <div
+              className="relative w-[200px] cursor-pointer bg-blue-700"
+              onClick={() => {
+                // updateCurrentJob(props.catergory, props.row);
+              }}
+            >
+              <div
+                className={`h-[30px] ${current === name ? "bg-yellow-500" : "bg-blue-600"}`}
+                // style={{ width: `${(currentXp / xpLeft) * 100}%` }}
+                style={{ width: "50%" }}
+              ></div>
+              <div className="absolute bottom-0 top-0 p-[5px]">{name}</div>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="max-w-64 text-center">
+            <p>{tooltip}</p>
+          </TooltipContent>
+        </Tooltip>
       </TableCell>
       <TableCell>{0}</TableCell>
       <TableCell>
@@ -109,6 +135,7 @@ export default function JobTable(props: {
                       xpGain={jobsData[job]!.getXpGain()}
                       xpLeft={jobsData[job]!.getXpLeft()}
                       current={currentJob}
+                      tooltip={tooltips[job]!}
                       updateCurrentJob={updateCurrentJob}
                       rebirthOne={rebirthOne}
                     />

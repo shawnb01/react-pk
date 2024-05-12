@@ -2,6 +2,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import "@/styles/globals.css";
 
 import { GeistSans } from "geist/font/sans";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export const metadata = {
   title: "React - Progress Knight",
@@ -23,10 +24,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="grid h-screen grid-rows-[auto,1fr] p-2">
-            <span className="pb-2 text-2xl">Progress Knight - React</span>
-            <div className="overflow-y-scroll">{children}</div>
-          </div>
+          <TooltipProvider>
+            <div className="grid h-screen grid-rows-[auto,1fr] p-2">
+              <span className="pb-2 text-2xl">Progress Knight - React</span>
+              <div className="overflow-y-scroll">{children}</div>
+            </div>
+          </TooltipProvider>
         </ThemeProvider>
       </body>
     </html>

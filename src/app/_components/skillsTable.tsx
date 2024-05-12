@@ -3,6 +3,7 @@ import {
   skillCategories,
   headerRowColors,
   jobCategories,
+  tooltips,
 } from "@/baseData/basedata";
 import { SkillBaseData } from "@/baseData/skills";
 import {
@@ -13,6 +14,11 @@ import {
   Table,
   TableBody,
 } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { formatBigNumber } from "@/lib/utils";
 import React from "react";
 
@@ -47,9 +53,9 @@ function SkillRow(props: {
   current: string;
   rebirthOne: number;
   effect: string;
+  tooltip: string;
   updateCurrentSkill: (cI: number, sI: number) => void;
 }) {
-  const currentXp = 0;
   const {
     skillData,
     updateCurrentSkill,
@@ -58,25 +64,33 @@ function SkillRow(props: {
     xpGain,
     xpLeft,
     effect,
+    tooltip,
   } = props;
   const { name, maxLevel, level } = skillData;
   //   const { name, currentLevel, income, xpGain, xpLeft, maxLevel } = jobData;
   return (
     <TableRow key={name}>
       <TableCell>
-        <div
-          className="relative w-[200px] cursor-pointer bg-blue-700"
-          onClick={() => {
-            // updateCurrentSkill(props.catergory, props.row);
-          }}
-        >
-          <div
-            className={`h-[30px] ${current === name ? "bg-yellow-500" : "bg-blue-600"}`}
-            // style={{ width: `${(currentXp / xpLeft) * 100}%` }}
-            style={{ width: "50%" }}
-          ></div>
-          <div className="absolute bottom-0 top-0 p-[5px]">{name}</div>
-        </div>
+        <Tooltip>
+          <TooltipTrigger>
+            <div
+              className="relative w-[200px] cursor-pointer bg-blue-700"
+              onClick={() => {
+                // updateCurrentSkill(props.catergory, props.row);
+              }}
+            >
+              <div
+                className={`h-[30px] ${current === name ? "bg-yellow-500" : "bg-blue-600"}`}
+                // style={{ width: `${(currentXp / xpLeft) * 100}%` }}
+                style={{ width: "50%" }}
+              ></div>
+              <div className="absolute bottom-0 top-0 p-[5px]">{name}</div>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="max-w-64 text-center">
+            {tooltip}
+          </TooltipContent>
+        </Tooltip>
       </TableCell>
       <TableCell>{level}</TableCell>
       <TableCell>{effect}</TableCell>
@@ -84,7 +98,7 @@ function SkillRow(props: {
       <TableCell>{formatBigNumber(xpLeft)}</TableCell>
       <TableCell
         className="text-right"
-        style={{ display: props.rebirthOne > 0 ? "table-cell" : "none" }}
+        style={{ display: rebirthOne > 0 ? "table-cell" : "none" }}
       >
         {maxLevel}
       </TableCell>
@@ -124,6 +138,7 @@ export default function SkillsTable(props: {
                       effect={`x${skillsData[skill]!.getEffect().toFixed(2)} ${skillsData[skill]!.getEffectDescription()}`}
                       xpGain={skillsData[skill]!.getXpGain()}
                       xpLeft={skillsData[skill]!.getXpLeft()}
+                      tooltip={tooltips[skill]!}
                       current={currentSkill}
                       updateCurrentSkill={updateCurrentSkill}
                       rebirthOne={rebirthOne}

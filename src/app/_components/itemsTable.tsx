@@ -11,7 +11,18 @@ import React from "react";
 import Coins from "./coins";
 import { Check } from "./icons";
 import { ItemData } from "@/lib/types";
-import { Item, headerRowColors, itemCategories } from "@/baseData/basedata";
+import {
+  Item,
+  headerRowColors,
+  itemCategories,
+  tooltips,
+} from "@/baseData/basedata";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 function ItemHeader(props: { title: string; color: string }) {
   return (
@@ -26,15 +37,29 @@ function ItemHeader(props: { title: string; color: string }) {
   );
 }
 
-function ItemRow(props: { itemData: Item; active: boolean; effect: string }) {
-  const { itemData, active, effect } = props;
+function ItemRow(props: {
+  itemData: Item;
+  active: boolean;
+  effect: string;
+  tooltip: string;
+}) {
+  const { itemData, active, effect, tooltip } = props;
   const { name, expense } = itemData;
   return (
     <TableRow key={name}>
-      <TableCell>{name}</TableCell>
+      <TableCell>
+        <Tooltip>
+          <TooltipTrigger>
+            <Button className="w-[200px]">{name}</Button>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="max-w-64 text-center">
+            <p>{tooltip}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TableCell>
       <TableCell>
         <Check
-          className="rounded-sm border border-primary bg-primary text-primary-foreground"
+          className="h-8 w-8 rounded-sm border border-primary bg-primary text-primary-foreground"
           style={{ display: active ? "" : "none" }}
         />
       </TableCell>
@@ -82,6 +107,7 @@ export default function ItemTable(props: {
                       itemData={itemsData[item]!}
                       effect={`x${itemsData[item]!.getEffect().toFixed(2)} ${itemsData[item]!.getEffectDescription()}`}
                       active={isItemActive(item)}
+                      tooltip={tooltips[item]!}
                       // updateActiveItem={updateCurrentItem}
                     />
                   );
