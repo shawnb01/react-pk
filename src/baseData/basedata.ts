@@ -109,7 +109,7 @@ export class Skill extends Task {
   }
 
   getEffect() {
-    return applyMultipliers(this.effect, this.xpMultipliers);
+    return 1 + this.level * this.effect;
   }
 
   getEffectDescription() {

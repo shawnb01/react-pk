@@ -1,4 +1,3 @@
-import { ItemsBaseData } from "@/baseData/items";
 import {
   Table,
   TableBody,
@@ -10,7 +9,6 @@ import {
 import React from "react";
 import Coins from "./coins";
 import { Check } from "./icons";
-import { ItemData } from "@/lib/types";
 import {
   Item,
   headerRowColors,
@@ -50,7 +48,9 @@ function ItemRow(props: {
       <TableCell>
         <Tooltip>
           <TooltipTrigger>
-            <Button className="w-[200px]">{name}</Button>
+            <Button className="w-[200px]" variant={"secondary"}>
+              {name}
+            </Button>
           </TooltipTrigger>
           <TooltipContent side="right" className="max-w-64 text-center">
             <p>{tooltip}</p>

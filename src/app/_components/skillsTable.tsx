@@ -5,7 +5,6 @@ import {
   jobCategories,
   tooltips,
 } from "@/baseData/basedata";
-import { SkillBaseData } from "@/baseData/skills";
 import {
   TableHeader,
   TableRow,
@@ -54,6 +53,7 @@ function SkillRow(props: {
   rebirthOne: number;
   effect: string;
   tooltip: string;
+  maxXp: number;
   updateCurrentSkill: (cI: number, sI: number) => void;
 }) {
   const {
@@ -65,6 +65,7 @@ function SkillRow(props: {
     xpLeft,
     effect,
     tooltip,
+    maxXp,
   } = props;
   const { name, maxLevel, level } = skillData;
   //   const { name, currentLevel, income, xpGain, xpLeft, maxLevel } = jobData;
@@ -81,8 +82,8 @@ function SkillRow(props: {
             >
               <div
                 className={`h-[30px] ${current === name ? "bg-yellow-500" : "bg-blue-600"}`}
-                // style={{ width: `${(currentXp / xpLeft) * 100}%` }}
-                style={{ width: "50%" }}
+                style={{ width: `${(skillData.xp / maxXp) * 100}%` }}
+                // style={{ width: "50%" }}
               ></div>
               <div className="absolute bottom-0 top-0 p-[5px]">{name}</div>
             </div>
@@ -138,6 +139,7 @@ export default function SkillsTable(props: {
                       effect={`x${skillsData[skill]!.getEffect().toFixed(2)} ${skillsData[skill]!.getEffectDescription()}`}
                       xpGain={skillsData[skill]!.getXpGain()}
                       xpLeft={skillsData[skill]!.getXpLeft()}
+                      maxXp={skillsData[skill]!.getMaxXp()}
                       tooltip={tooltips[skill]!}
                       current={currentSkill}
                       updateCurrentSkill={updateCurrentSkill}

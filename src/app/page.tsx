@@ -24,14 +24,14 @@ export default function HomePage() {
   const itemsData = useItemData(itemData);
 
   const startGameData: GameData = {
-    taskData: {},
-    itemData: {},
+    taskData: { ...jobsData, ...skillsData },
+    itemData: { ...itemsData },
     coins: 0,
     days: 365 * 14,
     evil: 0,
     paused: false,
     timeWarpingEnabled: true,
-    rebirthOneCount: 1,
+    rebirthOneCount: 0,
     rebirthTwoCount: 0,
     currentJob: jobsData["Beggar"]!,
     currentSkill: skillData["Concentration"]!,
@@ -45,20 +45,11 @@ export default function HomePage() {
     setGameData({ ...gameData, ...newData });
   }
 
-  // console.log(jobsData);
-
-  // function handleJobChange(cI: number, jI: number) {
-  //   Object.keys(jobsData).forEach((jobsType, cI) => {
-  //     Object.values(jobsData[jobsType] || {}).forEach((job, jI) => {
-  //       if (cI === jI) {
-  //         updateGameData({ currentJob: job });
-  //       }
-  //     });
-  //   });
-  // }
-
   function update() {
     // Call the functions to update the game state
+    gameData.currentJob.increaseXp();
+    gameData.currentSkill.increaseXp();
+
     updateGameData({
       days: increseDays(),
       coins: gameData.coins + calculateIncome(gameData.currentJob),
@@ -144,11 +135,13 @@ export default function HomePage() {
             <div className="relative w-[200px] bg-blue-700">
               <div
                 className="h-[30px] bg-yellow-500"
-                // style={{ width: `${(currentXp / xpLeft) * 100}%` }}
-                style={{ width: "33%" }}
+                style={{
+                  width: `${(gameData.currentSkill.xp / gameData.currentSkill.getMaxXp()) * 100}%`,
+                }}
+                // style={{ width: "33%" }}
               >
                 <div className="absolute bottom-0 top-0 p-[5px]">
-                  {/* {gameData.currentSkill.name} */}
+                  {gameData.currentSkill.name}
                 </div>
               </div>
             </div>

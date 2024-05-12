@@ -54,8 +54,8 @@ function JobRow(props: {
   tooltip: string;
   updateCurrentJob: (cI: number, jI: number) => void;
   rebirthOne: number;
+  maxXp: number;
 }) {
-  const currentXp = 0;
   const {
     jobData,
     updateCurrentJob,
@@ -64,8 +64,9 @@ function JobRow(props: {
     xpGain,
     xpLeft,
     tooltip,
+    maxXp,
   } = props;
-  const { name, maxLevel } = jobData;
+  const { name, maxLevel, level } = jobData;
   return (
     <TableRow key={name}>
       <TableCell>
@@ -79,8 +80,8 @@ function JobRow(props: {
             >
               <div
                 className={`h-[30px] ${current === name ? "bg-yellow-500" : "bg-blue-600"}`}
-                // style={{ width: `${(currentXp / xpLeft) * 100}%` }}
-                style={{ width: "50%" }}
+                style={{ width: `${(jobData.xp / maxXp) * 100}%` }}
+                // style={{ width: "50%" }}
               ></div>
               <div className="absolute bottom-0 top-0 p-[5px]">{name}</div>
             </div>
@@ -90,7 +91,7 @@ function JobRow(props: {
           </TooltipContent>
         </Tooltip>
       </TableCell>
-      <TableCell>{0}</TableCell>
+      <TableCell>{level}</TableCell>
       <TableCell>
         <Coins coins={income} />
       </TableCell>
@@ -134,6 +135,7 @@ export default function JobTable(props: {
                       income={jobsData[job]!.getIncome()}
                       xpGain={jobsData[job]!.getXpGain()}
                       xpLeft={jobsData[job]!.getXpLeft()}
+                      maxXp={jobsData[job]!.getMaxXp()}
                       current={currentJob}
                       tooltip={tooltips[job]!}
                       updateCurrentJob={updateCurrentJob}

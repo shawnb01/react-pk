@@ -1,19 +1,9 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { GameData, ItemData, JobTaskData, SkillTaskData } from "@/lib/types";
-import { Jobs } from "@/baseData/jobs";
-import { Items } from "@/baseData/items";
-import { Skills } from "@/baseData/skills";
 import { Item, Job } from "@/baseData/basedata";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
-}
-
-// console.log(Jobs, Items, Skills);
-
-if (!Skills["Fundamentals"]) {
-  throw new Error("Skills.Fundamentals is not defined");
 }
 
 const updataSpeed = 20;
