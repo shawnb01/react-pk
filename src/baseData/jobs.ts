@@ -1,10 +1,10 @@
-export type Job = {
+export type JobBaseData = {
   name: string;
   maxXp: number;
   income: number;
 };
 
-const Jobs: Record<string, Record<string, Job>> = {
+const Jobs: Record<string, Record<string, JobBaseData>> = {
   "Common Work": {
     Beggar: {
       name: "Beggar",

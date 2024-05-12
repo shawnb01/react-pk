@@ -1,4 +1,3 @@
-import { Job } from "@/baseData/jobs";
 import {
   Table,
   TableHeader,
@@ -10,6 +9,7 @@ import {
 import Coins from "./coins";
 import { formatBigNumber } from "@/lib/utils";
 import React from "react";
+import { Job, jobCategories, headerRowColors } from "@/baseData/basedata";
 
 function JobHeader(props: {
   title: string;
@@ -38,20 +38,22 @@ function JobHeader(props: {
 function JobRow(props: {
   jobData: Job;
   current: string;
-  updateCurrentJob: (job: string) => void;
+  income: number;
+  xpGain: number;
+  xpLeft: number;
+  updateCurrentJob: (cI: number, jI: number) => void;
   rebirthOne: number;
 }) {
   const currentXp = 0;
-  const { jobData, updateCurrentJob, current } = props;
-  const { name, maxXp: xpLeft, income } = jobData;
-  //   const { name, currentLevel, income, xpGain, xpLeft, maxLevel } = jobData;
+  const { jobData, updateCurrentJob, current, income, xpGain, xpLeft } = props;
+  const { name, maxLevel } = jobData;
   return (
     <TableRow key={name}>
       <TableCell>
         <div
           className="relative w-[200px] cursor-pointer bg-blue-700"
           onClick={() => {
-            updateCurrentJob(name);
+            // updateCurrentJob(props.catergory, props.row);
           }}
         >
           <div
@@ -66,51 +68,55 @@ function JobRow(props: {
       <TableCell>
         <Coins coins={income} />
       </TableCell>
-      <TableCell>{0}</TableCell>
+      <TableCell>{formatBigNumber(xpGain)}</TableCell>
       <TableCell>{formatBigNumber(xpLeft)}</TableCell>
       <TableCell
         className="text-right"
         style={{ display: props.rebirthOne > 0 ? "table-cell" : "none" }}
       >
-        {0}
+        {maxLevel}
       </TableCell>
     </TableRow>
   );
 }
 
 export default function JobTable(props: {
-  jobsData: Record<string, Record<string, Job>>;
+  jobsData: Record<string, Job>;
   currentJob: string;
   rebirthOne: number;
-  updateCurrentJob: (job: string) => void;
+  updateCurrentJob: (cI: number, jI: number) => void;
 }) {
   const { jobsData, currentJob, updateCurrentJob, rebirthOne } = props;
 
-  if (!jobsData) {
-    return <></>;
-  }
-
   return (
     <Table className="w-full md:container">
-      {Object.keys(jobsData).map((jobsType: string) => {
+      {Object.keys(jobCategories).map((jobCategory: string) => {
         return (
-          <React.Fragment key={jobsType}>
+          <React.Fragment key={jobCategory}>
             <JobHeader
-              title={jobsType}
-              color="bg-green-800"
+              title={jobCategory}
+              color={headerRowColors[jobCategory]!}
               rebirthOne={rebirthOne}
             />
             <TableBody>
-              {jobsData[jobsType] &&
-                Object.values(jobsData[jobsType] || {}).map((job: Job) => (
-                  <JobRow
-                    key={job.name}
-                    jobData={job}
-                    current={currentJob}
-                    updateCurrentJob={updateCurrentJob}
-                    rebirthOne={rebirthOne}
-                  />
-                ))}
+              {jobCategories[jobCategory]?.map((job, jI) => {
+                if (jobsData[job]?.name == job) {
+                  return (
+                    <JobRow
+                      key={job}
+                      jobData={jobsData[job]!}
+                      income={jobsData[job]!.getIncome()}
+                      xpGain={jobsData[job]!.getXpGain()}
+                      xpLeft={jobsData[job]!.getXpLeft()}
+                      current={currentJob}
+                      updateCurrentJob={updateCurrentJob}
+                      rebirthOne={rebirthOne}
+                    />
+                  );
+                } else {
+                  return null;
+                }
+              })}
             </TableBody>
           </React.Fragment>
         );

@@ -1,11 +1,11 @@
-export type Skill = {
+export type SkillBaseData = {
   name: string;
   maxXp: number;
   effect: number;
   description: string;
 };
 
-const Skills: Record<string, Record<string, Skill>> = {
+const Skills: Record<string, Record<string, SkillBaseData>> = {
   Fundamentals: {
     Concentration: {
       name: "Concentration",

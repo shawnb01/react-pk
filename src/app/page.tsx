@@ -2,47 +2,80 @@
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Jobs } from "@/baseData/jobs";
+import {
+  jobData,
+  useJobData,
+  skillData,
+  useSkillData,
+  itemData,
+  useItemData,
+} from "@/baseData/basedata";
 import { useState } from "react";
 import JobTable from "./_components/jobsTable";
 import Coins from "./_components/coins";
-import { Skills } from "@/baseData/skills";
 import SkillsTable from "./_components/skillsTable";
+import ItemsTable from "./_components/itemsTable";
+import { GameData } from "@/lib/types";
+import { getExpenses, calculateIncome, getNet } from "@/lib/utils";
 
 export default function HomePage() {
-  const [gameData, setGameData] = useState({
+  const jobsData = useJobData(jobData);
+  const skillsData = useSkillData(skillData);
+  const itemsData = useItemData(itemData);
+
+  const startGameData: GameData = {
     taskData: {},
     itemData: {},
-    coins: 110,
+    coins: 0,
     days: 365 * 14,
     evil: 0,
     paused: false,
     timeWarpingEnabled: true,
-    rebirthOneCount: 0,
+    rebirthOneCount: 1,
     rebirthTwoCount: 0,
-    currentJob: null,
-    currentSkill: null,
-    currentProperty: null,
-    currentMisc: null,
-  });
-  const [currentSkill, setCurrentSkill] = useState(
-    gameData.currentSkill || "Concentration",
-  );
-  const [currentJob, setCurrentJob] = useState(gameData.currentJob || "Beggar");
-  const [jobsData, setJobsData] = useState(Jobs);
-  const [skillsData, setSkillsData] = useState(Skills);
+    currentJob: jobsData["Beggar"]!,
+    currentSkill: skillData["Concentration"]!,
+    currentProperty: itemsData["Homeless"]!,
+    currentMisc: [],
+  };
 
-  function updateGameData(newData: any) {
+  const [gameData, setGameData] = useState(startGameData);
+
+  function updateGameData(newData: Partial<GameData>) {
     setGameData({ ...gameData, ...newData });
   }
 
-  function updateCurrentJob(job: string) {
-    setCurrentJob(job);
+  // console.log(jobsData);
+
+  // function handleJobChange(cI: number, jI: number) {
+  //   Object.keys(jobsData).forEach((jobsType, cI) => {
+  //     Object.values(jobsData[jobsType] || {}).forEach((job, jI) => {
+  //       if (cI === jI) {
+  //         updateGameData({ currentJob: job });
+  //       }
+  //     });
+  //   });
+  // }
+
+  function update() {
+    // Call the functions to update the game state
+    updateGameData({
+      days: increseDays(),
+      coins: gameData.coins + calculateIncome(gameData.currentJob),
+    });
   }
 
-  function updateCurrentSkill(skill: string) {
-    setCurrentSkill(skill);
+  function increseDays() {
+    let increase = applySpeed(1);
+    return gameData.days + increase;
   }
+
+  function applySpeed(speed: number) {
+    return gameData.paused ? 0 : speed;
+  }
+
+  const income = calculateIncome(gameData.currentJob);
+  const expenses = getExpenses(gameData.currentProperty, gameData.currentMisc);
 
   return (
     <main className="flex gap-4">
@@ -57,7 +90,7 @@ export default function HomePage() {
           <Button
             variant={"default"}
             onClick={() => {
-              updateGameData({ paused: !gameData.paused });
+              update();
             }}
           >
             {gameData.paused ? "Play" : "Pause"}
@@ -75,13 +108,19 @@ export default function HomePage() {
         </div>
         <div className="flex flex-col">
           <span>
-            Net/day: <Coins coins={0} />
+            Net/day:{" "}
+            {getNet(income, expenses) > 0 ? (
+              <span className="text-green-600"> + </span>
+            ) : (
+              <span className="text-red-600"> - </span>
+            )}
+            <Coins coins={getNet(income, expenses)} />
           </span>
           <span>
-            Income/day: <Coins coins={0} />
+            Income/day: <Coins coins={income} />
           </span>
           <span>
-            Expenses/day: <Coins coins={0} />
+            Expenses/day: <Coins coins={expenses} />
           </span>
         </div>
         <div className="flex flex-col gap-2">
@@ -89,11 +128,13 @@ export default function HomePage() {
             <div className="relative w-[200px] bg-blue-700">
               <div
                 className="h-[30px] bg-yellow-500"
-                // style={{ width: `${(currentXp / xpLeft) * 100}%` }}
-                style={{ width: "50%" }}
+                style={{
+                  width: `${(gameData.currentJob.xp / gameData.currentJob.getMaxXp()) * 100}%`,
+                }}
+                // style={{ width: "50%" }}
               >
                 <div className="absolute bottom-0 top-0 p-[5px]">
-                  {currentJob}
+                  {gameData.currentJob.name}
                 </div>
               </div>
             </div>
@@ -107,7 +148,7 @@ export default function HomePage() {
                 style={{ width: "33%" }}
               >
                 <div className="absolute bottom-0 top-0 p-[5px]">
-                  {currentSkill}
+                  {/* {gameData.currentSkill.name} */}
                 </div>
               </div>
             </div>
@@ -134,21 +175,25 @@ export default function HomePage() {
           <TabsContent value="jobs">
             <JobTable
               jobsData={jobsData}
-              currentJob={currentJob}
-              updateCurrentJob={updateCurrentJob}
+              currentJob={gameData.currentJob.name}
+              updateCurrentJob={(cI, jI) => {}}
               rebirthOne={gameData.rebirthOneCount}
             />
           </TabsContent>
           <TabsContent value="skills">
             <SkillsTable
               skillsData={skillsData}
-              currentSkill={currentSkill}
-              updateCurrentSkill={updateCurrentSkill}
+              currentSkill={gameData.currentSkill.name}
+              updateCurrentSkill={(cI, sI) => {}}
               rebirthOne={gameData.rebirthOneCount}
             />
           </TabsContent>
           <TabsContent value="shop">
-            Display all available items in the shop.
+            <ItemsTable
+              itemsData={itemsData}
+              currentProperty={gameData.currentProperty.name}
+              currentMisc={gameData.currentMisc}
+            />
           </TabsContent>
           <TabsContent value="settings">
             Display all available settings here.

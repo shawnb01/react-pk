@@ -1,4 +1,10 @@
-import { Skill } from "@/baseData/skills";
+import {
+  Skill,
+  skillCategories,
+  headerRowColors,
+  jobCategories,
+} from "@/baseData/basedata";
+import { SkillBaseData } from "@/baseData/skills";
 import {
   TableHeader,
   TableRow,
@@ -36,14 +42,24 @@ function SkillHeader(props: {
 
 function SkillRow(props: {
   skillData: Skill;
+  xpGain: number;
+  xpLeft: number;
   current: string;
   rebirthOne: number;
-  updateCurrentSkill: (skill: string) => void;
+  effect: string;
+  updateCurrentSkill: (cI: number, sI: number) => void;
 }) {
   const currentXp = 0;
-  const { skillData, updateCurrentSkill, current, rebirthOne } = props;
-  const { name, maxXp: xpLeft, effect, description } = skillData;
-  const skillMultiplyer = 1 + effect;
+  const {
+    skillData,
+    updateCurrentSkill,
+    current,
+    rebirthOne,
+    xpGain,
+    xpLeft,
+    effect,
+  } = props;
+  const { name, maxLevel, level } = skillData;
   //   const { name, currentLevel, income, xpGain, xpLeft, maxLevel } = jobData;
   return (
     <TableRow key={name}>
@@ -51,7 +67,7 @@ function SkillRow(props: {
         <div
           className="relative w-[200px] cursor-pointer bg-blue-700"
           onClick={() => {
-            updateCurrentSkill(name);
+            // updateCurrentSkill(props.catergory, props.row);
           }}
         >
           <div
@@ -62,25 +78,25 @@ function SkillRow(props: {
           <div className="absolute bottom-0 top-0 p-[5px]">{name}</div>
         </div>
       </TableCell>
-      <TableCell>{0}</TableCell>
-      <TableCell>{`x${skillMultiplyer + " " + description}`}</TableCell>
-      <TableCell>{0}</TableCell>
+      <TableCell>{level}</TableCell>
+      <TableCell>{effect}</TableCell>
+      <TableCell>{formatBigNumber(xpGain)}</TableCell>
       <TableCell>{formatBigNumber(xpLeft)}</TableCell>
       <TableCell
         className="text-right"
         style={{ display: props.rebirthOne > 0 ? "table-cell" : "none" }}
       >
-        {0}
+        {maxLevel}
       </TableCell>
     </TableRow>
   );
 }
 
 export default function SkillsTable(props: {
-  skillsData: Record<string, Record<string, Skill>>;
+  skillsData: Record<string, Skill>;
   currentSkill: string;
   rebirthOne: number;
-  updateCurrentSkill: (job: string) => void;
+  updateCurrentSkill: (cI: number, sI: number) => void;
 }) {
   const { skillsData, currentSkill, rebirthOne, updateCurrentSkill } = props;
 
@@ -90,27 +106,33 @@ export default function SkillsTable(props: {
 
   return (
     <Table className="w-full md:container">
-      {Object.keys(skillsData).map((skillType: string) => {
+      {Object.keys(skillCategories).map((skillCategory: string) => {
         return (
-          <React.Fragment key={skillType}>
+          <React.Fragment key={skillCategory}>
             <SkillHeader
-              title={skillType}
-              color="bg-green-800"
+              title={skillCategory}
+              color={headerRowColors[skillCategory]!}
               rebirthOne={rebirthOne}
             />
             <TableBody>
-              {skillsData[skillType] &&
-                Object.values(skillsData[skillType] || {}).map(
-                  (skill: Skill) => (
+              {skillCategories[skillCategory]?.map((skill: string) => {
+                if (skillsData[skill]?.name == skill) {
+                  return (
                     <SkillRow
-                      key={skill.name}
-                      skillData={skill}
+                      key={skill}
+                      skillData={skillsData[skill]!}
+                      effect={`x${skillsData[skill]!.getEffect().toFixed(2)} ${skillsData[skill]!.getEffectDescription()}`}
+                      xpGain={skillsData[skill]!.getXpGain()}
+                      xpLeft={skillsData[skill]!.getXpLeft()}
                       current={currentSkill}
-                      rebirthOne={rebirthOne}
                       updateCurrentSkill={updateCurrentSkill}
+                      rebirthOne={rebirthOne}
                     />
-                  ),
-                )}
+                  );
+                } else {
+                  return null;
+                }
+              })}
             </TableBody>
           </React.Fragment>
         );
