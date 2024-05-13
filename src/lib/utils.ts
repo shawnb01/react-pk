@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { Item, Job } from "@/baseData/basedata";
+import { Item, Job, Skill } from "@/baseData/basedata";
+import { ItemData, JobTaskData, SkillTaskData } from "./types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -16,11 +17,35 @@ const updataSpeed = 20;
 export function formatBigNumber(num: number) {
   const tier = (Math.log10(num) / 3) | 0;
   if (tier === 0) return num;
-  if (tier >= 5) return "Infinity";
-  const suffix = ["", "K", "M", "B", "T"][tier];
+  if (tier >= 10) return "Infinity";
+  const suffix = ["", "k", "M", "B", "T", "q", "Q", "Sx", "Sp", "Oc"][tier];
   const scale = Math.pow(10, tier * 3);
   const scaled = num / scale;
   return scaled.toFixed(1) + suffix;
+}
+
+export function getBindedTaskEffect(
+  taskName: string,
+  taskData: Record<string, SkillTaskData | JobTaskData>,
+): number {
+  let task = taskData[taskName];
+  if (task instanceof Skill) {
+    // console.log("getBindedTaskEffect", taskName, task.getEffect());
+    return task.getEffect();
+  }
+  return 1;
+}
+
+export function getBindedItemEffect(
+  itemName: string,
+  itemsData: Record<string, ItemData>,
+): number {
+  let item = itemsData[itemName];
+  if (item instanceof Skill) {
+    return item.getEffect();
+  }
+  // console.log("getBindedItemEffect", itemName, itemsData);
+  return 1;
 }
 
 export function getNet(income: number, expenses: number) {
@@ -45,19 +70,6 @@ function applyIncomeMultipliers(
     base *= multiplier;
   });
   return Math.round(income * base);
-}
-
-export function applyExpenses(
-  coins: number,
-  currentProperty: Item,
-  currentMisc: Item[],
-): number {
-  let debt = applySpeed(getExpenses(currentProperty, currentMisc));
-  coins -= debt;
-  if (coins < 0) {
-    goBankrupt();
-  }
-  return coins;
 }
 
 function applySpeed(num: number): number {

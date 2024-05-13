@@ -1,5 +1,15 @@
-export default function Coins(props: { coins: number }) {
-  const { coins } = props;
+import { formatBigNumber } from "@/lib/utils";
+
+export default function Coins(props: {
+  coins: number;
+  income?: number;
+  expenses?: number;
+}) {
+  const { coins, income, expenses } = props;
+  let withSign = false;
+  if (income !== undefined && expenses !== undefined) {
+    withSign = true;
+  }
 
   if (coins) {
     const p = Math.floor(coins / 1000000);
@@ -9,7 +19,16 @@ export default function Coins(props: { coins: number }) {
 
     return (
       <span>
-        {p ? <span className="text-cyan-400">{p}p </span> : null}
+        {withSign && (
+          <span
+            className={expenses! > income! ? "text-red-600" : "text-green-600"}
+          >
+            {expenses! > income! ? "- " : "+ "}
+          </span>
+        )}
+        {p ? (
+          <span className="text-cyan-400">{formatBigNumber(p)}p </span>
+        ) : null}
         {g ? <span className="text-amber-600">{g}g </span> : null}
         {s ? <span className="text-gray-400">{s}s </span> : null}
         {c ? <span className="text-yellow-800">{c}c</span> : null}

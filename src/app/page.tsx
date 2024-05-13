@@ -9,14 +9,26 @@ import {
   useSkillData,
   itemData,
   useItemData,
+  Job,
+  jobCategories,
+  Skill,
+  skillCategories,
+  Item,
 } from "@/baseData/basedata";
 import { useState } from "react";
 import JobTable from "./_components/jobsTable";
 import Coins from "./_components/coins";
 import SkillsTable from "./_components/skillsTable";
 import ItemsTable from "./_components/itemsTable";
-import { GameData } from "@/lib/types";
-import { getExpenses, calculateIncome, getNet } from "@/lib/utils";
+import { GameData, ItemData, JobTaskData, SkillTaskData } from "@/lib/types";
+import {
+  getExpenses,
+  calculateIncome,
+  getNet,
+  getBindedTaskEffect,
+  getBindedItemEffect,
+} from "@/lib/utils";
+import { get } from "http";
 
 export default function HomePage() {
   const jobsData = useJobData(jobData);
@@ -24,8 +36,11 @@ export default function HomePage() {
   const itemsData = useItemData(itemData);
 
   const startGameData: GameData = {
-    taskData: { ...jobsData, ...skillsData },
-    itemData: { ...itemsData },
+    taskData: {
+      ...jobsData,
+      ...skillsData,
+    } as unknown as Record<string, JobTaskData | SkillTaskData>,
+    itemData: { ...itemsData } as unknown as Record<string, ItemData>,
     coins: 0,
     days: 365 * 14,
     evil: 0,
@@ -36,7 +51,7 @@ export default function HomePage() {
     currentJob: jobsData["Beggar"]!,
     currentSkill: skillData["Concentration"]!,
     currentProperty: itemsData["Homeless"]!,
-    currentMisc: [],
+    currentMisc: [itemsData["Book"]!],
   };
 
   const [gameData, setGameData] = useState(startGameData);
@@ -47,12 +62,26 @@ export default function HomePage() {
 
   function update() {
     // Call the functions to update the game state
+    addMultipliers();
     gameData.currentJob.increaseXp();
     gameData.currentSkill.increaseXp();
 
+    const updateCoins =
+      calculateIncome(gameData.currentJob) +
+      applyExpenses(
+        gameData.coins,
+        gameData.currentProperty,
+        gameData.currentMisc,
+      );
+
     updateGameData({
+      taskData: gameData.taskData,
+      itemData: gameData.itemData,
       days: increseDays(),
-      coins: gameData.coins + calculateIncome(gameData.currentJob),
+      coins: updateCoins > 0 ? updateCoins : 0,
+      currentProperty:
+        updateCoins > 0 ? gameData.currentProperty : itemsData["Homeless"]!,
+      currentMisc: gameData.currentMisc,
     });
   }
 
@@ -63,6 +92,119 @@ export default function HomePage() {
 
   function applySpeed(speed: number) {
     return gameData.paused ? 0 : speed;
+  }
+
+  // JobxPMultipliers = [maxLevelMultiplier, Happiness, Dark influence, Demon training, Productivity, Personal Squire]
+  // SkillxPMultipliers = [maxLevelMultiplier, Happiness, Dark influence, Demon training, Concentration, Book, Study desk, Library]
+  // MilitaryxPMultipliers = [...JobxPMultipliers, Battle tactics, Steel longsword]
+
+  // JobIncomeMultipliers = [levelMultiplier, Demon's wealth]
+  // MilitaryIncomeMultipliers = [...JobIncomeMultipliers, Strength]
+  function addMultipliers() {
+    for (let taskName in gameData.taskData) {
+      let task = gameData.taskData[taskName]!;
+
+      task.xpMultipliers = [];
+      if (task instanceof Job) task.incomeMultipliers = [];
+
+      task.xpMultipliers.push(task.getMaxLevelMultiplier()); // Index: 0
+      task.xpMultipliers.push(getHappiness()); // Index: 1
+      task.xpMultipliers.push(
+        getBindedTaskEffect("Dark influence", gameData.taskData),
+      );
+      task.xpMultipliers.push(
+        getBindedTaskEffect("Demon training", gameData.taskData),
+      );
+
+      if (task instanceof Job) {
+        task.incomeMultipliers.push(task.getLevelMultiplier());
+        task.incomeMultipliers.push(
+          getBindedTaskEffect("Demon's wealth", gameData.taskData),
+        );
+        task.xpMultipliers.push(
+          getBindedTaskEffect("Productivity", gameData.taskData),
+        );
+        task.xpMultipliers.push(
+          getBindedItemEffect("Personal squire", gameData.itemData),
+        );
+      } else if (task instanceof Skill) {
+        task.xpMultipliers.push(
+          getBindedTaskEffect("Concentration", gameData.taskData),
+        );
+        task.xpMultipliers.push(getBindedItemEffect("Book", gameData.itemData));
+        task.xpMultipliers.push(
+          getBindedItemEffect("Study desk", gameData.itemData),
+        );
+        task.xpMultipliers.push(
+          getBindedItemEffect("Library", gameData.itemData),
+        );
+      }
+
+      if (
+        jobCategories["Military"]!.includes(task.name) &&
+        task instanceof Job
+      ) {
+        task.incomeMultipliers.push(
+          getBindedTaskEffect("Strength", gameData.taskData),
+        );
+        task.xpMultipliers.push(
+          getBindedTaskEffect("Battle tactics", gameData.taskData),
+        );
+        task.xpMultipliers.push(
+          getBindedItemEffect("Steel longsword", gameData.itemData),
+        );
+      } else if (task.name == "Strength") {
+        task.xpMultipliers.push(
+          getBindedTaskEffect("Muscle memory", gameData.taskData),
+        );
+        task.xpMultipliers.push(
+          getBindedItemEffect("Dumbbells", gameData.itemData),
+        );
+      } else if (skillCategories["Magic"]!.includes(task.name)) {
+        task.xpMultipliers.push(
+          getBindedItemEffect("Sapphire charm", gameData.itemData),
+        );
+      } else if (jobCategories["The Arcane Association"]!.includes(task.name)) {
+        task.xpMultipliers.push(
+          getBindedTaskEffect("Mana control", gameData.taskData),
+        );
+      } else if (skillCategories["Dark magic"]!.includes(task.name)) {
+        task.xpMultipliers.push(getEvil());
+      }
+    }
+
+    for (let itemName in gameData.itemData) {
+      var item = gameData.itemData[itemName];
+      item!.expenseMultipliers = [];
+      item!.expenseMultipliers.push(
+        getBindedTaskEffect("Bargaining", gameData.taskData),
+      );
+      item!.expenseMultipliers.push(
+        getBindedTaskEffect("Intimidation", gameData.taskData),
+      );
+    }
+  }
+
+  function getHappiness() {
+    let meditationEffect = getBindedTaskEffect("Meditation", gameData.taskData);
+    let butlerEffect = getBindedItemEffect("Butler", gameData.itemData);
+    return (
+      meditationEffect * butlerEffect * gameData.currentProperty.getEffect()
+    );
+  }
+
+  function getEvil() {
+    return gameData.evil;
+  }
+
+  function applyExpenses(
+    coins: number,
+    currentProperty: Item,
+    currentMisc: Item[],
+  ): number {
+    let debt = applySpeed(getExpenses(currentProperty, currentMisc));
+    coins -= debt;
+    return coins;
   }
 
   const income = calculateIncome(gameData.currentJob);
@@ -100,12 +242,11 @@ export default function HomePage() {
         <div className="flex flex-col">
           <span>
             Net/day:{" "}
-            {getNet(income, expenses) > 0 ? (
-              <span className="text-green-600"> + </span>
-            ) : (
-              <span className="text-red-600"> - </span>
-            )}
-            <Coins coins={getNet(income, expenses)} />
+            <Coins
+              coins={getNet(income, expenses)}
+              income={income}
+              expenses={expenses}
+            />
           </span>
           <span>
             Income/day: <Coins coins={income} />
@@ -149,7 +290,7 @@ export default function HomePage() {
           </div>
         </div>
         <div className="flex flex-col">
-          <span>Happiness: 1.0</span>
+          <span>Happiness: {getHappiness().toFixed(1)}</span>
           <span className="text-sm text-muted-foreground">
             Affects all xp gains
           </span>

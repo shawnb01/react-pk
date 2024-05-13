@@ -1,7 +1,11 @@
-import { Item, Job, Skill } from "@/baseData/basedata";
-import { ItemsBaseData } from "@/baseData/items";
-import { JobBaseData } from "@/baseData/jobs";
-import { SkillBaseData } from "@/baseData/skills";
+import {
+  Item,
+  ItemBaseData,
+  Job,
+  JobBaseData,
+  Skill,
+  SkillBaseData,
+} from "@/baseData/basedata";
 
 type GameData = {
   taskData: Record<string, JobTaskData | SkillTaskData>;
@@ -28,6 +32,7 @@ type JobTaskData = {
   xpMultipliers: number[];
   incomeMultipliers: number[];
   income: number;
+  getMaxLevelMultiplier: () => number;
 };
 
 type SkillTaskData = {
@@ -37,11 +42,12 @@ type SkillTaskData = {
   maxLevel: number;
   xp: number;
   xpMultipliers: number[];
+  getMaxLevelMultiplier: () => number;
 };
 
 type ItemData = {
   name: string;
-  baseData: Record<string, ItemsBaseData>;
+  baseData: Record<string, ItemBaseData>;
   expenseMultipliers: number[];
 };
 

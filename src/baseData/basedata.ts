@@ -1,20 +1,20 @@
 import { GameData } from "@/lib/types";
 import { useRef } from "react";
 
-type TaskBaseData = {
+export type TaskBaseData = {
   name: string;
   maxXp: number;
   [key: string]: string | number; // Index
 };
 
-type JobBaseData = {
+export type JobBaseData = {
   name: string;
   maxXp: number;
   income: number;
   [key: string]: string | number; // Index
 };
 
-type SkillBaseData = {
+export type SkillBaseData = {
   name: string;
   maxXp: number;
   effect: number;
@@ -22,7 +22,7 @@ type SkillBaseData = {
   [key: string]: string | number; // Index
 };
 
-type ItemBaseData = {
+export type ItemBaseData = {
   name: string;
   expense: number;
   effect: number;
@@ -30,7 +30,7 @@ type ItemBaseData = {
   [key: string]: string | number | undefined; // Index
 };
 
-type Categories = {
+export type Categories = {
   [key: string]: string[];
 };
 
@@ -40,7 +40,7 @@ class Task {
   level: number;
   maxLevel: number;
   xp: number;
-  xpMultipliers: number[];
+  xpMultipliers: [];
   constructor(baseData: TaskBaseData) {
     this.baseData = baseData;
     this.name = baseData.name;
