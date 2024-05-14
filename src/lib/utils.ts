@@ -26,7 +26,7 @@ export function formatBigNumber(num: number) {
 
 export function getBindedTaskEffect(
   taskName: string,
-  taskData: Record<string, SkillTaskData | JobTaskData>,
+  taskData: Record<string, Skill | Job>,
 ): number {
   let task = taskData[taskName];
   if (task instanceof Skill) {
@@ -37,7 +37,7 @@ export function getBindedTaskEffect(
 
 export function getBindedItemEffect(
   itemName: string,
-  itemsData: Record<string, ItemData>,
+  itemsData: Record<string, Item>,
   itemEquipped: boolean,
 ): number {
   let item = itemsData[itemName];

@@ -8,8 +8,8 @@ import {
 } from "@/baseData/basedata";
 
 type GameData = {
-  taskData: Record<string, JobTaskData | SkillTaskData>;
-  itemData: Record<string, ItemData>;
+  taskData: Record<string, Job | Skill>;
+  itemData: Record<string, Item>;
   coins: number;
   days: number;
   evil: number;

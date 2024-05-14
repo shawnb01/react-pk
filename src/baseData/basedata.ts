@@ -40,7 +40,7 @@ class Task {
   level: number;
   maxLevel: number;
   xp: number;
-  xpMultipliers: [];
+  xpMultipliers: number[];
   constructor(baseData: TaskBaseData) {
     this.baseData = baseData;
     this.name = baseData.name;
@@ -60,7 +60,7 @@ class Task {
     return Math.round(this.getMaxXp() - this.xp);
   }
 
-  getMaxLevelMultiplier() {
+  getMaxLevelMultiplier(): number {
     return 1 + this.maxLevel / 10;
   }
 
@@ -624,9 +624,9 @@ const tooltips: { [key: string]: string } = {
     "Stores a collection of books, each containing vast amounts of information from basic life skills to complex magic spells.",
 };
 
-const itemData: Record<string, Item> = {};
 const jobData: Record<string, Job> = {};
 const skillData: Record<string, Skill> = {};
+const itemData: Record<string, Item> = {};
 
 for (const [key, value] of Object.entries(jobBaseData)) {
   jobData[key] = new Job(value);
@@ -845,6 +845,14 @@ function useItemData(initialData: Record<string, Item>) {
     item.current = initialData;
   }
   return item.current;
+}
+
+function useRequirements() {
+  const req = useRef(requirements);
+  if (!req.current) {
+    req.current = requirements;
+  }
+  return req.current;
 }
 
 export { jobData, jobCategories, useJobData };

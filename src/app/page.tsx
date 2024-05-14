@@ -16,7 +16,7 @@ import {
   Item,
   itemCategories,
 } from "@/baseData/basedata";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import JobTable from "./_components/jobsTable";
 import Coins from "./_components/coins";
 import SkillsTable from "./_components/skillsTable";
@@ -47,8 +47,8 @@ export default function HomePage() {
     taskData: {
       ...jobsData,
       ...skillsData,
-    } as unknown as Record<string, JobTaskData | SkillTaskData>,
-    itemData: { ...itemsData } as unknown as Record<string, ItemData>,
+    },
+    itemData: { ...itemsData },
     coins: 0,
     days: 365 * 14,
     evil: 0,
@@ -64,6 +64,19 @@ export default function HomePage() {
 
   const [gameData, setGameData] = useState(startGameData);
 
+  useEffect(() => {
+    const gameloop = setInterval(update, 1000);
+    return () => clearInterval(gameloop);
+  }, [
+    nextJob,
+    nextSkill,
+    nextProperty,
+    nextMisc,
+    gameData.coins,
+    gameData.days,
+    gameData.paused,
+  ]);
+
   function updateGameData(newData: Partial<GameData>) {
     setGameData({ ...gameData, ...newData });
   }
@@ -76,6 +89,9 @@ export default function HomePage() {
 
     let updateProperty = gameData.currentProperty;
     let updateMisc = gameData.currentMisc;
+    console.log(gameData.currentJob.name, nextJob);
+    let updateJob = gameData.taskData[nextJob]! as Job;
+    let updateSkill = gameData.taskData[nextSkill]! as Skill;
 
     let updateCoins =
       calculateIncome(gameData.currentJob) +
@@ -97,6 +113,8 @@ export default function HomePage() {
       itemData: gameData.itemData,
       days: increseDays(),
       coins: updateCoins,
+      currentJob: updateJob,
+      currentSkill: updateSkill,
       currentProperty: updateProperty,
       currentMisc: updateMisc,
     });
@@ -104,9 +122,6 @@ export default function HomePage() {
 
   function updateCurrentJob(name: string) {
     setNextJob(name);
-    updateGameData({
-      currentJob: jobsData[name]!,
-    });
   }
 
   function updateCurrentSkill(name: string) {
@@ -176,7 +191,7 @@ export default function HomePage() {
     for (let taskName in gameData.taskData) {
       let task = gameData.taskData[taskName]!;
 
-      task.xpMultipliers = [];
+      task.xpMultipliers = new Array<number>(); // Update the type of task.xpMultipliers to allow numbers
       if (task instanceof Job) task.incomeMultipliers = [];
 
       task.xpMultipliers.push(task.getMaxLevelMultiplier()); // Index: 0
@@ -325,7 +340,7 @@ export default function HomePage() {
   const expenses = getExpenses(gameData.currentProperty, gameData.currentMisc);
 
   function setCustomEffects() {
-    var bargaining = gameData.taskData["Bargaining"]! as SkillTaskData;
+    var bargaining = gameData.taskData["Bargaining"]! as Skill;
     bargaining.getEffect = function () {
       var multiplier = 1 - getBaseLog(7, bargaining.level + 1) / 10;
       if (multiplier < 0.1) {
@@ -334,7 +349,7 @@ export default function HomePage() {
       return multiplier;
     };
 
-    var intimidation = gameData.taskData["Intimidation"]! as SkillTaskData;
+    var intimidation = gameData.taskData["Intimidation"]! as Skill;
     intimidation.getEffect = function () {
       var multiplier = 1 - getBaseLog(7, intimidation.level + 1) / 10;
       if (multiplier < 0.1) {
@@ -343,13 +358,13 @@ export default function HomePage() {
       return multiplier;
     };
 
-    var timeWarping = gameData.taskData["Time warping"]! as SkillTaskData;
+    var timeWarping = gameData.taskData["Time warping"]! as Skill;
     timeWarping.getEffect = function () {
       var multiplier = 1 + getBaseLog(13, timeWarping.level + 1);
       return multiplier;
     };
 
-    var immortality = gameData.taskData["Immortality"]! as SkillTaskData;
+    var immortality = gameData.taskData["Immortality"]! as Skill;
     immortality.getEffect = function () {
       var multiplier = 1 + getBaseLog(33, immortality.level + 1);
       return multiplier;
