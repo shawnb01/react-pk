@@ -52,7 +52,7 @@ function JobRow(props: {
   xpGain: number;
   xpLeft: number;
   tooltip: string;
-  updateCurrentJob: (cI: number, jI: number) => void;
+  updateCurrentJob: (name: string) => void;
   rebirthOne: number;
   maxXp: number;
 }) {
@@ -75,7 +75,7 @@ function JobRow(props: {
             <div
               className="relative w-[200px] cursor-pointer bg-blue-700"
               onClick={() => {
-                // updateCurrentJob(props.catergory, props.row);
+                updateCurrentJob(name);
               }}
             >
               <div
@@ -111,7 +111,7 @@ export default function JobTable(props: {
   jobsData: Record<string, Job>;
   currentJob: string;
   rebirthOne: number;
-  updateCurrentJob: (cI: number, jI: number) => void;
+  updateCurrentJob: (name: string) => void;
 }) {
   const { jobsData, currentJob, updateCurrentJob, rebirthOne } = props;
 

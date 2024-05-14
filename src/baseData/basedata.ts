@@ -640,7 +640,7 @@ for (const [key, value] of Object.entries(itemBaseData)) {
   itemData[key] = new Item(value);
 }
 
-const requirements = {
+export const requirements = {
   //Other
   "The Arcane Association": new TaskRequirement([
     { task: "Concentration", requirement: 200 },

@@ -30,7 +30,6 @@ export function getBindedTaskEffect(
 ): number {
   let task = taskData[taskName];
   if (task instanceof Skill) {
-    // console.log("getBindedTaskEffect", taskName, task.getEffect());
     return task.getEffect();
   }
   return 1;
@@ -39,15 +38,19 @@ export function getBindedTaskEffect(
 export function getBindedItemEffect(
   itemName: string,
   itemsData: Record<string, ItemData>,
+  itemEquipped: boolean,
 ): number {
   let item = itemsData[itemName];
-  if (item instanceof Skill) {
-    return item.getEffect();
+  if (itemEquipped) {
+    if (item instanceof Item) {
+      return item.getEffect();
+    } else {
+      return 1;
+    }
+  } else {
+    return 1;
   }
-  // console.log("getBindedItemEffect", itemName, itemsData);
-  return 1;
 }
-
 export function getNet(income: number, expenses: number) {
   return Math.abs(income - expenses);
 }

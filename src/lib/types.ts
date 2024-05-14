@@ -43,6 +43,7 @@ type SkillTaskData = {
   xp: number;
   xpMultipliers: number[];
   getMaxLevelMultiplier: () => number;
+  getEffect: () => number;
 };
 
 type ItemData = {

@@ -14,6 +14,7 @@ import {
   Skill,
   skillCategories,
   Item,
+  itemCategories,
 } from "@/baseData/basedata";
 import { useState } from "react";
 import JobTable from "./_components/jobsTable";
@@ -28,12 +29,19 @@ import {
   getBindedTaskEffect,
   getBindedItemEffect,
 } from "@/lib/utils";
-import { get } from "http";
+import { Moon, Sun } from "./_components/icons";
+import { useTheme } from "next-themes";
 
 export default function HomePage() {
+  const { setTheme, theme } = useTheme();
   const jobsData = useJobData(jobData);
   const skillsData = useSkillData(skillData);
   const itemsData = useItemData(itemData);
+
+  const [nextJob, setNextJob] = useState<string>("Knight");
+  const [nextSkill, setNextSkill] = useState<string>("Concentration");
+  const [nextProperty, setNextProperty] = useState<string>("Homeless");
+  const [nextMisc, setNextMisc] = useState<string[]>([]);
 
   const startGameData: GameData = {
     taskData: {
@@ -48,10 +56,10 @@ export default function HomePage() {
     timeWarpingEnabled: true,
     rebirthOneCount: 0,
     rebirthTwoCount: 0,
-    currentJob: jobsData["Beggar"]!,
-    currentSkill: skillData["Concentration"]!,
-    currentProperty: itemsData["Homeless"]!,
-    currentMisc: [itemsData["Book"]!],
+    currentJob: jobsData[nextJob]!,
+    currentSkill: skillData[nextSkill]!,
+    currentProperty: itemsData[nextProperty]!,
+    currentMisc: nextMisc.map((item) => itemsData[item]!),
   };
 
   const [gameData, setGameData] = useState(startGameData);
@@ -66,7 +74,10 @@ export default function HomePage() {
     gameData.currentJob.increaseXp();
     gameData.currentSkill.increaseXp();
 
-    const updateCoins =
+    let updateProperty = gameData.currentProperty;
+    let updateMisc = gameData.currentMisc;
+
+    let updateCoins =
       calculateIncome(gameData.currentJob) +
       applyExpenses(
         gameData.coins,
@@ -74,14 +85,75 @@ export default function HomePage() {
         gameData.currentMisc,
       );
 
+    if (updateCoins < 0) {
+      // Set property to homeless and remove items from misc
+      updateProperty = itemsData["Homeless"]!;
+      updateMisc = [];
+      updateCoins = 0;
+    }
+
     updateGameData({
       taskData: gameData.taskData,
       itemData: gameData.itemData,
       days: increseDays(),
-      coins: updateCoins > 0 ? updateCoins : 0,
-      currentProperty:
-        updateCoins > 0 ? gameData.currentProperty : itemsData["Homeless"]!,
-      currentMisc: gameData.currentMisc,
+      coins: updateCoins,
+      currentProperty: updateProperty,
+      currentMisc: updateMisc,
+    });
+  }
+
+  function updateCurrentJob(name: string) {
+    setNextJob(name);
+    updateGameData({
+      currentJob: jobsData[name]!,
+    });
+  }
+
+  function updateCurrentSkill(name: string) {
+    setNextSkill(name);
+    updateGameData({
+      currentSkill: skillData[name]!,
+    });
+  }
+
+  function updateCurrentItem(name: string) {
+    // Check if the item is a property or a misc item
+    const containsProperty = itemCategories["Properties"]?.includes(name);
+    if (containsProperty) {
+      updateCurrentProperty(name);
+    } else {
+      // Check if the item is already in the currentMisc array
+      const containsItem = gameData.currentMisc.some(
+        (item) => item.name === name,
+      );
+      if (containsItem) {
+        // Remove the item from the currentMisc array
+        const newMisc = gameData.currentMisc.filter(
+          (item) => item.name !== name,
+        );
+        updateGameData({
+          currentMisc: newMisc,
+        });
+      } else {
+        // Add the item to the currentMisc array
+        const newMisc = gameData.currentMisc;
+        newMisc.push(itemsData[name]!);
+        updateCurrentMisc(newMisc.map((item) => item.name));
+      }
+    }
+  }
+
+  function updateCurrentProperty(name: string) {
+    setNextProperty(name);
+    updateGameData({
+      currentProperty: itemsData[name]!,
+    });
+  }
+
+  function updateCurrentMisc(name: string[]) {
+    setNextMisc(name);
+    updateGameData({
+      currentMisc: name.map((item) => itemsData[item]!),
     });
   }
 
@@ -125,18 +197,38 @@ export default function HomePage() {
           getBindedTaskEffect("Productivity", gameData.taskData),
         );
         task.xpMultipliers.push(
-          getBindedItemEffect("Personal squire", gameData.itemData),
+          getBindedItemEffect(
+            "Personal squire",
+            gameData.itemData,
+            gameData.currentMisc.some(
+              (item) => item.name === "Personal squire",
+            ),
+          ),
         );
       } else if (task instanceof Skill) {
         task.xpMultipliers.push(
           getBindedTaskEffect("Concentration", gameData.taskData),
         );
-        task.xpMultipliers.push(getBindedItemEffect("Book", gameData.itemData));
         task.xpMultipliers.push(
-          getBindedItemEffect("Study desk", gameData.itemData),
+          getBindedItemEffect(
+            "Book",
+            gameData.itemData,
+            gameData.currentMisc.some((item) => item.name === "Book"),
+          ),
         );
         task.xpMultipliers.push(
-          getBindedItemEffect("Library", gameData.itemData),
+          getBindedItemEffect(
+            "Study desk",
+            gameData.itemData,
+            gameData.currentMisc.some((item) => item.name === "Study desk"),
+          ),
+        );
+        task.xpMultipliers.push(
+          getBindedItemEffect(
+            "Library",
+            gameData.itemData,
+            gameData.currentMisc.some((item) => item.name === "Library"),
+          ),
         );
       }
 
@@ -151,18 +243,32 @@ export default function HomePage() {
           getBindedTaskEffect("Battle tactics", gameData.taskData),
         );
         task.xpMultipliers.push(
-          getBindedItemEffect("Steel longsword", gameData.itemData),
+          getBindedItemEffect(
+            "Steel longsword",
+            gameData.itemData,
+            gameData.currentMisc.some(
+              (item) => item.name === "Steel longsword",
+            ),
+          ),
         );
       } else if (task.name == "Strength") {
         task.xpMultipliers.push(
           getBindedTaskEffect("Muscle memory", gameData.taskData),
         );
         task.xpMultipliers.push(
-          getBindedItemEffect("Dumbbells", gameData.itemData),
+          getBindedItemEffect(
+            "Dumbbells",
+            gameData.itemData,
+            gameData.currentMisc.some((item) => item.name === "Dumbbells"),
+          ),
         );
       } else if (skillCategories["Magic"]!.includes(task.name)) {
         task.xpMultipliers.push(
-          getBindedItemEffect("Sapphire charm", gameData.itemData),
+          getBindedItemEffect(
+            "Sapphire charm",
+            gameData.itemData,
+            gameData.currentMisc.some((item) => item.name === "Sapphire charm"),
+          ),
         );
       } else if (jobCategories["The Arcane Association"]!.includes(task.name)) {
         task.xpMultipliers.push(
@@ -187,7 +293,11 @@ export default function HomePage() {
 
   function getHappiness() {
     let meditationEffect = getBindedTaskEffect("Meditation", gameData.taskData);
-    let butlerEffect = getBindedItemEffect("Butler", gameData.itemData);
+    let butlerEffect = getBindedItemEffect(
+      "Butler",
+      gameData.itemData,
+      gameData.currentMisc.some((item) => item.name === "Butler"),
+    );
     return (
       meditationEffect * butlerEffect * gameData.currentProperty.getEffect()
     );
@@ -207,8 +317,46 @@ export default function HomePage() {
     return coins;
   }
 
+  function getBaseLog(x: number, y: number) {
+    return Math.log(y) / Math.log(x);
+  }
+
   const income = calculateIncome(gameData.currentJob);
   const expenses = getExpenses(gameData.currentProperty, gameData.currentMisc);
+
+  function setCustomEffects() {
+    var bargaining = gameData.taskData["Bargaining"]! as SkillTaskData;
+    bargaining.getEffect = function () {
+      var multiplier = 1 - getBaseLog(7, bargaining.level + 1) / 10;
+      if (multiplier < 0.1) {
+        multiplier = 0.1;
+      }
+      return multiplier;
+    };
+
+    var intimidation = gameData.taskData["Intimidation"]! as SkillTaskData;
+    intimidation.getEffect = function () {
+      var multiplier = 1 - getBaseLog(7, intimidation.level + 1) / 10;
+      if (multiplier < 0.1) {
+        multiplier = 0.1;
+      }
+      return multiplier;
+    };
+
+    var timeWarping = gameData.taskData["Time warping"]! as SkillTaskData;
+    timeWarping.getEffect = function () {
+      var multiplier = 1 + getBaseLog(13, timeWarping.level + 1);
+      return multiplier;
+    };
+
+    var immortality = gameData.taskData["Immortality"]! as SkillTaskData;
+    immortality.getEffect = function () {
+      var multiplier = 1 + getBaseLog(33, immortality.level + 1);
+      return multiplier;
+    };
+  }
+
+  setCustomEffects();
 
   return (
     <main className="flex gap-4">
@@ -310,7 +458,7 @@ export default function HomePage() {
             <JobTable
               jobsData={jobsData}
               currentJob={gameData.currentJob.name}
-              updateCurrentJob={(cI, jI) => {}}
+              updateCurrentJob={updateCurrentJob}
               rebirthOne={gameData.rebirthOneCount}
             />
           </TabsContent>
@@ -318,7 +466,7 @@ export default function HomePage() {
             <SkillsTable
               skillsData={skillsData}
               currentSkill={gameData.currentSkill.name}
-              updateCurrentSkill={(cI, sI) => {}}
+              updateCurrentSkill={updateCurrentSkill}
               rebirthOne={gameData.rebirthOneCount}
             />
           </TabsContent>
@@ -327,10 +475,19 @@ export default function HomePage() {
               itemsData={itemsData}
               currentProperty={gameData.currentProperty.name}
               currentMisc={gameData.currentMisc}
+              updateCurrentItem={updateCurrentItem}
             />
           </TabsContent>
           <TabsContent value="settings">
-            Display all available settings here.
+            <Button
+              variant={"outline"}
+              size={"icon"}
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            >
+              <Moon className="rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+              <Sun className="absolute rotate-0 scale-100 transition-all dark:rotate-90 dark:scale-0" />
+              <span className="sr-only">Toggle theme</span>
+            </Button>
           </TabsContent>
         </Tabs>
       </section>

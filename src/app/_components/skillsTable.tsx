@@ -54,7 +54,7 @@ function SkillRow(props: {
   effect: string;
   tooltip: string;
   maxXp: number;
-  updateCurrentSkill: (cI: number, sI: number) => void;
+  updateCurrentSkill: (name: string) => void;
 }) {
   const {
     skillData,
@@ -77,7 +77,7 @@ function SkillRow(props: {
             <div
               className="relative w-[200px] cursor-pointer bg-blue-700"
               onClick={() => {
-                // updateCurrentSkill(props.catergory, props.row);
+                updateCurrentSkill(name);
               }}
             >
               <div
@@ -111,7 +111,7 @@ export default function SkillsTable(props: {
   skillsData: Record<string, Skill>;
   currentSkill: string;
   rebirthOne: number;
-  updateCurrentSkill: (cI: number, sI: number) => void;
+  updateCurrentSkill: (name: string) => void;
 }) {
   const { skillsData, currentSkill, rebirthOne, updateCurrentSkill } = props;
 

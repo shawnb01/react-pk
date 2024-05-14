@@ -40,15 +40,22 @@ function ItemRow(props: {
   active: boolean;
   effect: string;
   tooltip: string;
+  expense: number;
+  updateCurrentItem: (name: string) => void;
 }) {
-  const { itemData, active, effect, tooltip } = props;
-  const { name, expense } = itemData;
+  const { itemData, active, effect, tooltip, updateCurrentItem, expense } =
+    props;
+  const { name } = itemData;
   return (
     <TableRow key={name}>
       <TableCell>
         <Tooltip>
           <TooltipTrigger>
-            <Button className="w-[200px]" variant={"secondary"}>
+            <Button
+              className="w-[200px]"
+              variant={"secondary"}
+              onClick={() => updateCurrentItem(name)}
+            >
               {name}
             </Button>
           </TooltipTrigger>
@@ -75,8 +82,9 @@ export default function ItemTable(props: {
   itemsData: Record<string, Item>;
   currentProperty: string;
   currentMisc: Item[];
+  updateCurrentItem: (name: string) => void;
 }) {
-  const { itemsData, currentMisc, currentProperty } = props;
+  const { itemsData, currentMisc, currentProperty, updateCurrentItem } = props;
 
   if (!itemsData) {
     return <></>;
@@ -108,7 +116,8 @@ export default function ItemTable(props: {
                       effect={`x${itemsData[item]!.getEffect().toFixed(2)} ${itemsData[item]!.getEffectDescription()}`}
                       active={isItemActive(item)}
                       tooltip={tooltips[item]!}
-                      // updateActiveItem={updateCurrentItem}
+                      expense={itemsData[item]!.getExpense()}
+                      updateCurrentItem={updateCurrentItem}
                     />
                   );
                 } else {
