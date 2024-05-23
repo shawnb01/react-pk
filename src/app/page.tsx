@@ -33,6 +33,10 @@ import { Moon, Sun } from "./_components/icons";
 import { useTheme } from "next-themes";
 
 export default function HomePage() {
+  const baseGameSpeed = 4;
+  const baseLifeSpan = 365 * 70;
+  const updateSpeed = 20;
+
   const { setTheme, theme } = useTheme();
   const jobsData = useJobData(jobData);
   const skillsData = useSkillData(skillData);
@@ -65,7 +69,7 @@ export default function HomePage() {
   const [gameData, setGameData] = useState(startGameData);
 
   useEffect(() => {
-    const gameloop = setInterval(update, 1000);
+    const gameloop = setInterval(update, 1000 / updateSpeed);
     return () => clearInterval(gameloop);
   }, [
     nextJob,
@@ -89,7 +93,6 @@ export default function HomePage() {
 
     let updateProperty = gameData.currentProperty;
     let updateMisc = gameData.currentMisc;
-    console.log(gameData.currentJob.name, nextJob);
     let updateJob = gameData.taskData[nextJob]! as Job;
     let updateSkill = gameData.taskData[nextSkill]! as Skill;
 
@@ -178,15 +181,9 @@ export default function HomePage() {
   }
 
   function applySpeed(speed: number) {
-    return gameData.paused ? 0 : speed;
+    return gameData.paused ? 0 : (speed * getGameSpeed()) / baseGameSpeed;
   }
 
-  // JobxPMultipliers = [maxLevelMultiplier, Happiness, Dark influence, Demon training, Productivity, Personal Squire]
-  // SkillxPMultipliers = [maxLevelMultiplier, Happiness, Dark influence, Demon training, Concentration, Book, Study desk, Library]
-  // MilitaryxPMultipliers = [...JobxPMultipliers, Battle tactics, Steel longsword]
-
-  // JobIncomeMultipliers = [levelMultiplier, Demon's wealth]
-  // MilitaryIncomeMultipliers = [...JobIncomeMultipliers, Strength]
   function addMultipliers() {
     for (let taskName in gameData.taskData) {
       let task = gameData.taskData[taskName]!;
@@ -379,13 +376,41 @@ export default function HomePage() {
     });
   }
 
+  function getGameSpeed() {
+    const timeWarping = gameData.taskData["Time warping"] as Skill;
+    const timeWarpingSpeed = gameData.timeWarpingEnabled
+      ? timeWarping.getEffect()
+      : 1;
+    return baseGameSpeed * +!gameData.paused * +isAlive() * timeWarpingSpeed;
+  }
+
+  function isAlive() {
+    const condition = gameData.days < getLifespan();
+    if (!condition) {
+      goCommitDie();
+    }
+    return condition;
+  }
+
+  function getLifespan() {
+    const immortality = gameData.taskData["Immortality"] as Skill;
+    const superImmortality = gameData.taskData["Super immortality"] as Skill;
+    return (
+      baseLifeSpan * immortality.getEffect() * superImmortality.getEffect()
+    );
+  }
+
+  function goCommitDie() {
+    console.log("You died");
+  }
+
   return (
     <main className="flex gap-4">
       <aside className="flex max-h-[480px] w-72 flex-shrink-0 flex-col gap-4 bg-secondary p-3 text-foreground">
         <div className="flex flex-col">
-          <span className="text-xl">{`Age: ${Math.floor(gameData.days / 365)} | Day: ${gameData.days % 365}`}</span>
+          <span className="text-xl">{`Age: ${Math.floor(gameData.days / 365)} | Day: ${Math.floor(gameData.days % 365)}`}</span>
           <span className="text-sm text-muted-foreground">
-            Lifespan: 70 years
+            Lifespan: {Math.floor(getLifespan() / 365)}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -471,7 +496,7 @@ export default function HomePage() {
             <TabsTrigger value="jobs">Jobs</TabsTrigger>
             <TabsTrigger value="skills">Skills</TabsTrigger>
             <TabsTrigger value="shop">Shop</TabsTrigger>
-            <TabsTrigger value="settings" className="">
+            <TabsTrigger value="settings" className="flex-end">
               Settings
             </TabsTrigger>
           </TabsList>

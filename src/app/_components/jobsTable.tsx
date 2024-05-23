@@ -73,13 +73,13 @@ function JobRow(props: {
         <Tooltip>
           <TooltipTrigger>
             <div
-              className="relative w-[200px] cursor-pointer bg-blue-700"
+              className="relative w-[200px] cursor-pointer bg-sky-400 dark:bg-blue-700"
               onClick={() => {
                 updateCurrentJob(name);
               }}
             >
               <div
-                className={`h-[30px] ${current === name ? "bg-yellow-500" : "bg-blue-600"}`}
+                className={`h-[30px] ${current === name ? "bg-yellow-400 dark:bg-yellow-600" : "bg-sky-600 dark:bg-blue-600"}`}
                 style={{ width: `${(jobData.xp / maxXp) * 100}%` }}
                 // style={{ width: "50%" }}
               ></div>

@@ -499,15 +499,15 @@ const itemCategories: Categories = {
 };
 
 const headerRowColors: { [key: string]: string } = {
-  "Common work": "bg-green-800",
-  Military: "bg-red-800",
-  "The Arcane Association": "bg-violet-800",
-  Fundamentals: "bg-cyan-800",
-  Combat: "bg-amber-800",
-  Magic: "bg-fuchsia-800",
-  "Dark magic": "bg-rose-800",
-  Properties: "bg-blue-800",
-  Misc: "bg-indigo-800",
+  "Common work": "bg-green-600 dark:bg-green-800",
+  Military: "bg-red-600 dark:bg-red-800",
+  "The Arcane Association": "bg-violet-600 dark:bg-violet-800",
+  Fundamentals: "bg-cyan-600 dark:bg-cyan-800",
+  Combat: "bg-amber-600 dark:bg-amber-800",
+  Magic: "bg-fuchsia-600 dark:bg-fuchsia-800",
+  "Dark magic": "bg-rose-600 dark:bg-rose-800",
+  Properties: "bg-blue-600 dark:bg-blue-800",
+  Misc: "bg-indigo-600 dark:bg-indigo-800",
 };
 
 const tooltips: { [key: string]: string } = {
