@@ -55,7 +55,14 @@ export function getNet(income: number, expenses: number) {
   return Math.abs(income - expenses);
 }
 
-export function calculateIncome(job: Job): number {
+export function calculateIncome(
+  job: Job,
+  applySpeed?: (value: number) => number,
+) {
+  if (applySpeed)
+    return applySpeed(
+      applyIncomeMultipliers(job.income, job.incomeMultipliers),
+    );
   return applyIncomeMultipliers(job.income, job.incomeMultipliers);
 }
 

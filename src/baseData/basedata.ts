@@ -68,8 +68,8 @@ class Task {
     return applyMultipliers(10, this.xpMultipliers);
   }
 
-  increaseXp() {
-    this.xp += this.getXpGain();
+  increaseXp(applySpeed: (value: number) => number) {
+    this.xp += applySpeed(this.getXpGain());
     if (this.xp >= this.getMaxXp()) {
       let excess = this.xp - this.getMaxXp();
       while (excess >= 0) {

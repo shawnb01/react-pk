@@ -84,8 +84,8 @@ export default function HomePage() {
   function update() {
     // Call the functions to update the game state
     addMultipliers();
-    gameData.currentJob.increaseXp();
-    gameData.currentSkill.increaseXp();
+    gameData.currentJob.increaseXp(applySpeed);
+    gameData.currentSkill.increaseXp(applySpeed);
 
     let updateProperty = gameData.currentProperty;
     let updateMisc = gameData.currentMisc;
@@ -94,7 +94,7 @@ export default function HomePage() {
     let updateSkill = gameData.taskData[nextSkill]! as Skill;
 
     let updateCoins =
-      calculateIncome(gameData.currentJob) +
+      calculateIncome(gameData.currentJob, applySpeed) +
       applyExpenses(
         gameData.coins,
         gameData.currentProperty,
@@ -373,6 +373,12 @@ export default function HomePage() {
 
   setCustomEffects();
 
+  function pause() {
+    updateGameData({
+      paused: !gameData.paused,
+    });
+  }
+
   return (
     <main className="flex gap-4">
       <aside className="flex max-h-[480px] w-72 flex-shrink-0 flex-col gap-4 bg-secondary p-3 text-foreground">
@@ -386,7 +392,7 @@ export default function HomePage() {
           <Button
             variant={"default"}
             onClick={() => {
-              update();
+              pause();
             }}
           >
             {gameData.paused ? "Play" : "Pause"}
