@@ -7,13 +7,19 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import Coins from "./coins";
-import { formatBigNumber } from "@/lib/utils";
+import { cn, formatBigNumber } from "@/lib/utils";
 import React from "react";
 import {
   Job,
   jobCategories,
   headerRowColors,
   tooltips,
+  TaskBaseData,
+  TaskRequirement,
+  EvilRequirement,
+  AgeRequirement,
+  CoinRequirement,
+  Requirement,
 } from "@/baseData/basedata";
 import {
   Tooltip,
@@ -25,9 +31,10 @@ function JobHeader(props: {
   title: string;
   color: string;
   rebirthOne: number;
+  className?: string;
 }) {
   return (
-    <TableHeader className={`${props.color}`}>
+    <TableHeader className={cn(`${props.color}`, props.className)}>
       <TableRow>
         <TableHead className="min-w-[250px]">{props.title}</TableHead>
         <TableHead>Level</TableHead>
@@ -55,6 +62,8 @@ function JobRow(props: {
   updateCurrentJob: (name: string) => void;
   rebirthOne: number;
   maxXp: number;
+  className?: string;
+  requirements: any;
 }) {
   const {
     jobData,
@@ -65,10 +74,12 @@ function JobRow(props: {
     xpLeft,
     tooltip,
     maxXp,
+    requirements,
   } = props;
   const { name, maxLevel, level } = jobData;
+
   return (
-    <TableRow key={name}>
+    <TableRow key={name} className={cn(props.className)}>
       <TableCell>
         <Tooltip>
           <TooltipTrigger>
@@ -112,8 +123,17 @@ export default function JobTable(props: {
   currentJob: string;
   rebirthOne: number;
   updateCurrentJob: (name: string) => void;
+  requirements: Record<
+    string,
+    | TaskRequirement
+    | CoinRequirement
+    | AgeRequirement
+    | EvilRequirement
+    | Requirement
+  >;
 }) {
-  const { jobsData, currentJob, updateCurrentJob, rebirthOne } = props;
+  const { jobsData, currentJob, updateCurrentJob, rebirthOne, requirements } =
+    props;
 
   return (
     <Table className="w-full md:container">
@@ -124,9 +144,10 @@ export default function JobTable(props: {
               title={jobCategory}
               color={headerRowColors[jobCategory]!}
               rebirthOne={rebirthOne}
+              className={requirements[jobCategory]?.isCompleted ? "hidden" : ""}
             />
             <TableBody>
-              {jobCategories[jobCategory]?.map((job, jI) => {
+              {jobCategories[jobCategory]?.map((job) => {
                 if (jobsData[job]?.name == job) {
                   return (
                     <JobRow
@@ -140,6 +161,8 @@ export default function JobTable(props: {
                       tooltip={tooltips[job]!}
                       updateCurrentJob={updateCurrentJob}
                       rebirthOne={rebirthOne}
+                      className={requirements[job]?.completed ? "" : "hidden"}
+                      requirements={requirements[job]?.requirements}
                     />
                   );
                 } else {

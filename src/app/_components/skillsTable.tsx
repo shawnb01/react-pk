@@ -4,6 +4,11 @@ import {
   headerRowColors,
   jobCategories,
   tooltips,
+  AgeRequirement,
+  CoinRequirement,
+  EvilRequirement,
+  TaskRequirement,
+  Requirement,
 } from "@/baseData/basedata";
 import {
   TableHeader,
@@ -18,16 +23,17 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { formatBigNumber } from "@/lib/utils";
+import { cn, formatBigNumber } from "@/lib/utils";
 import React from "react";
 
 function SkillHeader(props: {
   title: string;
   color: string;
   rebirthOne: number;
+  className?: string;
 }) {
   return (
-    <TableHeader className={`${props.color}`}>
+    <TableHeader className={cn(`${props.color}`, props.className)}>
       <TableRow>
         <TableHead className="min-w-[250px]">{props.title}</TableHead>
         <TableHead>Level</TableHead>
@@ -55,6 +61,8 @@ function SkillRow(props: {
   tooltip: string;
   maxXp: number;
   updateCurrentSkill: (name: string) => void;
+  className?: string;
+  requirements: any;
 }) {
   const {
     skillData,
@@ -70,7 +78,7 @@ function SkillRow(props: {
   const { name, maxLevel, level } = skillData;
   //   const { name, currentLevel, income, xpGain, xpLeft, maxLevel } = jobData;
   return (
-    <TableRow key={name}>
+    <TableRow key={name} className={cn(props.className)}>
       <TableCell>
         <Tooltip>
           <TooltipTrigger>
@@ -112,6 +120,14 @@ export default function SkillsTable(props: {
   currentSkill: string;
   rebirthOne: number;
   updateCurrentSkill: (name: string) => void;
+  requirements: Record<
+    string,
+    | TaskRequirement
+    | CoinRequirement
+    | AgeRequirement
+    | EvilRequirement
+    | Requirement
+  >;
 }) {
   const { skillsData, currentSkill, rebirthOne, updateCurrentSkill } = props;
 
@@ -128,6 +144,9 @@ export default function SkillsTable(props: {
               title={skillCategory}
               color={headerRowColors[skillCategory]!}
               rebirthOne={rebirthOne}
+              className={
+                props.requirements[skillCategory]?.isCompleted ? "hidden" : ""
+              }
             />
             <TableBody>
               {skillCategories[skillCategory]?.map((skill: string) => {
@@ -144,6 +163,10 @@ export default function SkillsTable(props: {
                       current={currentSkill}
                       updateCurrentSkill={updateCurrentSkill}
                       rebirthOne={rebirthOne}
+                      className={
+                        props.requirements[skill]?.completed ? "" : "hidden"
+                      }
+                      requirements={props.requirements[skill]?.requirements}
                     />
                   );
                 } else {

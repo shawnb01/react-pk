@@ -15,6 +15,8 @@ import {
   skillCategories,
   Item,
   itemCategories,
+  useRequirements,
+  requirementData,
 } from "@/baseData/basedata";
 import { useEffect, useState } from "react";
 import JobTable from "./_components/jobsTable";
@@ -41,8 +43,9 @@ export default function HomePage() {
   const jobsData = useJobData(jobData);
   const skillsData = useSkillData(skillData);
   const itemsData = useItemData(itemData);
+  const requirements = useRequirements(requirementData);
 
-  const [nextJob, setNextJob] = useState<string>("Knight");
+  const [nextJob, setNextJob] = useState<string>("Beggar");
   const [nextSkill, setNextSkill] = useState<string>("Concentration");
   const [nextProperty, setNextProperty] = useState<string>("Homeless");
   const [nextMisc, setNextMisc] = useState<string[]>([]);
@@ -53,6 +56,7 @@ export default function HomePage() {
       ...skillsData,
     },
     itemData: { ...itemsData },
+    requirements: requirements,
     coins: 0,
     days: 365 * 14,
     evil: 0,
@@ -90,6 +94,9 @@ export default function HomePage() {
     addMultipliers();
     gameData.currentJob.increaseXp(applySpeed);
     gameData.currentSkill.increaseXp(applySpeed);
+    for (let req in gameData.requirements) {
+      gameData.requirements[req]?.isCompleted(gameData);
+    }
 
     let updateProperty = gameData.currentProperty;
     let updateMisc = gameData.currentMisc;
@@ -114,6 +121,7 @@ export default function HomePage() {
     updateGameData({
       taskData: gameData.taskData,
       itemData: gameData.itemData,
+      requirements: gameData.requirements,
       days: increseDays(),
       coins: updateCoins,
       currentJob: updateJob,
@@ -173,6 +181,49 @@ export default function HomePage() {
     updateGameData({
       currentMisc: name.map((item) => itemsData[item]!),
     });
+  }
+
+  function rebirthOne() {
+    updateGameData({
+      rebirthOneCount: gameData.rebirthOneCount + 1,
+    });
+
+    rebirthReset();
+  }
+
+  function rebirthTwo() {
+    updateGameData({
+      rebirthTwoCount: gameData.rebirthTwoCount + 1,
+      evil: getEvilGain(),
+    });
+
+    rebirthReset();
+
+    for (let taskName in gameData.taskData) {
+      let task = gameData.taskData[taskName]!;
+      task.maxLevel = 0;
+    }
+  }
+
+  function rebirthReset() {
+    updateGameData({
+      coins: 0,
+      days: 365 * 14,
+      paused: false,
+      timeWarpingEnabled: true,
+      currentJob: jobsData["Beggar"]!,
+      currentSkill: skillData["Concentration"]!,
+      currentProperty: itemsData["Homeless"]!,
+      currentMisc: [],
+    });
+  }
+
+  function getEvilGain() {
+    let evilControl = gameData.taskData["Evil control"] as Skill;
+    let bloodMeditation = gameData.taskData["Blood meditation"] as Skill;
+    let evil = evilControl.getEffect() * bloodMeditation.getEffect();
+    // console.log(evil)
+    return evil;
   }
 
   function increseDays() {
@@ -406,7 +457,7 @@ export default function HomePage() {
 
   return (
     <main className="flex gap-4">
-      <aside className="flex max-h-[480px] w-72 flex-shrink-0 flex-col gap-4 bg-secondary p-3 text-foreground">
+      <aside className="flex max-h-[720px] min-h-fit w-72 flex-shrink-0 flex-col gap-4 bg-secondary p-3 text-foreground">
         <div className="flex flex-col">
           <span className="text-xl">{`Age: ${Math.floor(gameData.days / 365)} | Day: ${Math.floor(gameData.days % 365)}`}</span>
           <span className="text-sm text-muted-foreground">
@@ -489,16 +540,41 @@ export default function HomePage() {
             Affects all xp gains
           </span>
         </div>
+        {/* Display Gamespeed options */}
+        <div className="flex flex-col">
+          <span>Game Speed</span>
+          <span>Time Warping</span>
+        </div>
+        {/* Display Evil level */}
+        <div className="flex flex-col">
+          <span>Evil: {gameData.evil.toFixed(1)}</span>
+          <span className="text-sm text-muted-foreground">
+            Affects dark magic xp gains
+          </span>
+        </div>
       </aside>
       <section className="flex flex-col">
         <Tabs defaultValue="jobs" className="w-[900px]">
           <TabsList className="flex justify-start">
             <TabsTrigger value="jobs">Jobs</TabsTrigger>
             <TabsTrigger value="skills">Skills</TabsTrigger>
-            <TabsTrigger value="shop">Shop</TabsTrigger>
-            <TabsTrigger value="settings" className="flex-end">
-              Settings
+            <TabsTrigger
+              value="shop"
+              className={
+                gameData.requirements["Shop"]?.completed ? "" : "hidden"
+              }
+            >
+              Shop
             </TabsTrigger>
+            <TabsTrigger
+              className={
+                gameData.requirements["Rebirth tab"]?.completed ? "" : "hidden"
+              }
+              value="rebirth"
+            >
+              Amulet
+            </TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
           <TabsContent value="jobs">
             <JobTable
@@ -506,6 +582,7 @@ export default function HomePage() {
               currentJob={gameData.currentJob.name}
               updateCurrentJob={updateCurrentJob}
               rebirthOne={gameData.rebirthOneCount}
+              requirements={gameData.requirements}
             />
           </TabsContent>
           <TabsContent value="skills">
@@ -514,6 +591,7 @@ export default function HomePage() {
               currentSkill={gameData.currentSkill.name}
               updateCurrentSkill={updateCurrentSkill}
               rebirthOne={gameData.rebirthOneCount}
+              requirements={gameData.requirements}
             />
           </TabsContent>
           <TabsContent value="shop">
@@ -522,7 +600,28 @@ export default function HomePage() {
               currentProperty={gameData.currentProperty.name}
               currentMisc={gameData.currentMisc}
               updateCurrentItem={updateCurrentItem}
+              requirements={gameData.requirements}
             />
+          </TabsContent>
+          <TabsContent value="rebirth">
+            <div className="flex flex-col gap-2">
+              <Button
+                variant={"default"}
+                onClick={() => {
+                  rebirthOne();
+                }}
+              >
+                Rebirth One
+              </Button>
+              <Button
+                variant={"default"}
+                onClick={() => {
+                  rebirthTwo();
+                }}
+              >
+                Rebirth Two
+              </Button>
+            </div>
           </TabsContent>
           <TabsContent value="settings">
             <Button

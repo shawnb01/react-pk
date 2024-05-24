@@ -10,7 +10,12 @@ import React from "react";
 import Coins from "./coins";
 import { Check } from "./icons";
 import {
+  AgeRequirement,
+  CoinRequirement,
+  EvilRequirement,
   Item,
+  Requirement,
+  TaskRequirement,
   headerRowColors,
   itemCategories,
   tooltips,
@@ -21,6 +26,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 function ItemHeader(props: { title: string; color: string }) {
   return (
@@ -42,12 +48,21 @@ function ItemRow(props: {
   tooltip: string;
   expense: number;
   updateCurrentItem: (name: string) => void;
+  requirement: any;
+  className?: string;
 }) {
-  const { itemData, active, effect, tooltip, updateCurrentItem, expense } =
-    props;
+  const {
+    itemData,
+    active,
+    effect,
+    tooltip,
+    updateCurrentItem,
+    expense,
+    requirement,
+  } = props;
   const { name } = itemData;
   return (
-    <TableRow key={name}>
+    <TableRow key={name} className={cn(props.className)}>
       <TableCell>
         <Tooltip>
           <TooltipTrigger>
@@ -83,6 +98,14 @@ export default function ItemTable(props: {
   currentProperty: string;
   currentMisc: Item[];
   updateCurrentItem: (name: string) => void;
+  requirements: Record<
+    string,
+    | Requirement
+    | TaskRequirement
+    | CoinRequirement
+    | AgeRequirement
+    | EvilRequirement
+  >;
 }) {
   const { itemsData, currentMisc, currentProperty, updateCurrentItem } = props;
 
@@ -118,6 +141,10 @@ export default function ItemTable(props: {
                       tooltip={tooltips[item]!}
                       expense={itemsData[item]!.getExpense()}
                       updateCurrentItem={updateCurrentItem}
+                      className={
+                        props.requirements[item]?.completed ? "" : "hidden"
+                      }
+                      requirement={props.requirements[item]?.requirements}
                     />
                   );
                 } else {

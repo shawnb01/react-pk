@@ -1,15 +1,28 @@
 import {
+  AgeRequirement,
+  CoinRequirement,
+  EvilRequirement,
   Item,
   ItemBaseData,
   Job,
   JobBaseData,
   Skill,
   SkillBaseData,
+  TaskRequirement,
+  Requirement,
 } from "@/baseData/basedata";
 
 type GameData = {
   taskData: Record<string, Job | Skill>;
   itemData: Record<string, Item>;
+  requirements: Record<
+    string,
+    | CoinRequirement
+    | AgeRequirement
+    | EvilRequirement
+    | TaskRequirement
+    | Requirement
+  >;
   coins: number;
   days: number;
   evil: number;

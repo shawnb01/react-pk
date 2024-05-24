@@ -156,16 +156,20 @@ export class Item {
   }
 }
 
-class Requirement {
-  requirements: { task?: string; requirement: number }[];
+export class Requirement {
+  requirements: { task: string; requirement: number }[];
   completed: boolean;
-  constructor(requirements: { task?: string; requirement: number }[]) {
+  constructor(requirements: { task: string; requirement: number }[]) {
     this.requirements = requirements;
     this.completed = false;
   }
+
+  isCompleted(gameData: GameData) {
+    return this.completed;
+  }
 }
 
-class TaskRequirement extends Requirement {
+export class TaskRequirement extends Requirement {
   type: string;
   constructor(requirements: { task: string; requirement: number }[]) {
     super(requirements);
@@ -180,12 +184,14 @@ class TaskRequirement extends Requirement {
     this.completed = this.requirements.every((r) =>
       this.getCondition(r.task!, r.requirement, gameData),
     );
+
+    return this.completed;
   }
 }
 
-class CoinRequirement extends Requirement {
+export class CoinRequirement extends Requirement {
   type: string;
-  constructor(requirements: { task?: string; requirement: number }[]) {
+  constructor(requirements: { task: string; requirement: number }[]) {
     super(requirements);
     this.type = "Coin";
   }
@@ -198,30 +204,34 @@ class CoinRequirement extends Requirement {
     this.completed = this.requirements.every((r) =>
       this.getCondition(gameData.coins, r.requirement),
     );
+
+    return this.completed;
   }
 }
 
-class AgeRequirement extends Requirement {
+export class AgeRequirement extends Requirement {
   type: string;
-  constructor(requirements: { task?: string; requirement: number }[]) {
+  constructor(requirements: { task: string; requirement: number }[]) {
     super(requirements);
     this.type = "Age";
   }
 
   getCondition(days: number, requirement: number) {
-    return days >= requirement;
+    return days >= requirement * 365;
   }
 
   isCompleted(gameData: GameData) {
     this.completed = this.requirements.every((r) =>
       this.getCondition(gameData.days, r.requirement),
     );
+
+    return this.completed;
   }
 }
 
-class EvilRequirement extends Requirement {
+export class EvilRequirement extends Requirement {
   type: string;
-  constructor(requirements: { task?: string; requirement: number }[]) {
+  constructor(requirements: { task: string; requirement: number }[]) {
     super(requirements);
     this.type = "Evil";
   }
@@ -234,6 +244,8 @@ class EvilRequirement extends Requirement {
     this.completed = this.requirements.every((r) =>
       this.getCondition(gameData.evil, r.requirement),
     );
+
+    return this.completed;
   }
 }
 
@@ -627,6 +639,7 @@ const tooltips: { [key: string]: string } = {
 const jobData: Record<string, Job> = {};
 const skillData: Record<string, Skill> = {};
 const itemData: Record<string, Item> = {};
+const requirementData: Record<string, Requirement> = {};
 
 for (const [key, value] of Object.entries(jobBaseData)) {
   jobData[key] = new Job(value);
@@ -640,7 +653,7 @@ for (const [key, value] of Object.entries(itemBaseData)) {
   itemData[key] = new Item(value);
 }
 
-export const requirements = {
+const baseRequirements = {
   //Other
   "The Arcane Association": new TaskRequirement([
     { task: "Concentration", requirement: 200 },
@@ -648,16 +661,16 @@ export const requirements = {
   ]),
   "Dark magic": new EvilRequirement([{ task: "", requirement: 1 }]),
   Shop: new CoinRequirement([
-    { requirement: itemData["Tent"]!.getExpense() * 50 },
+    { task: "coin", requirement: itemData["Tent"]!.getExpense() * 50 },
   ]),
-  "Rebirth tab": new AgeRequirement([{ requirement: 25 }]),
-  "Rebirth note 1": new AgeRequirement([{ requirement: 45 }]),
-  "Rebirth note 2": new AgeRequirement([{ requirement: 65 }]),
-  "Rebirth note 3": new AgeRequirement([{ requirement: 200 }]),
-  "Evil info": new EvilRequirement([{ requirement: 1 }]),
+  "Rebirth tab": new AgeRequirement([{ task: "Age", requirement: 25 }]),
+  "Rebirth note 1": new AgeRequirement([{ task: "Age", requirement: 45 }]),
+  "Rebirth note 2": new AgeRequirement([{ task: "Age", requirement: 65 }]),
+  "Rebirth note 3": new AgeRequirement([{ task: "Age", requirement: 200 }]),
+  "Evil info": new EvilRequirement([{ task: "Evil", requirement: 1 }]),
   "Time warping info": new TaskRequirement([{ task: "Mage", requirement: 10 }]),
-  Automation: new AgeRequirement([{ requirement: 20 }]),
-  "Quick task display": new AgeRequirement([{ requirement: 20 }]),
+  Automation: new AgeRequirement([{ task: "Age", requirement: 20 }]),
+  "Quick task display": new AgeRequirement([{ task: "Age", requirement: 20 }]),
 
   //Common work
   Beggar: new TaskRequirement([]),
@@ -769,59 +782,72 @@ export const requirements = {
   ]),
 
   //Dark magic
-  "Dark influence": new EvilRequirement([{ requirement: 1 }]),
-  "Evil control": new EvilRequirement([{ requirement: 1 }]),
-  Intimidation: new EvilRequirement([{ requirement: 1 }]),
-  "Demon training": new EvilRequirement([{ requirement: 25 }]),
-  "Blood meditation": new EvilRequirement([{ requirement: 75 }]),
-  "Demon's wealth": new EvilRequirement([{ requirement: 500 }]),
+  "Dark influence": new EvilRequirement([{ task: "Evil", requirement: 1 }]),
+  "Evil control": new EvilRequirement([{ task: "Evil", requirement: 1 }]),
+  Intimidation: new EvilRequirement([{ task: "Evil", requirement: 1 }]),
+  "Demon training": new EvilRequirement([{ task: "Evil", requirement: 25 }]),
+  "Blood meditation": new EvilRequirement([{ task: "Evil", requirement: 75 }]),
+  "Demon's wealth": new EvilRequirement([{ task: "Evil", requirement: 500 }]),
 
   //Properties
-  Homeless: new CoinRequirement([{ requirement: 0 }]),
-  Tent: new CoinRequirement([{ requirement: 0 }]),
+  Homeless: new CoinRequirement([{ task: "Coin", requirement: 0 }]),
+  Tent: new CoinRequirement([{ task: "Coin", requirement: 0 }]),
   "Wooden hut": new CoinRequirement([
-    { requirement: itemData["Wooden hut"]!.getExpense() * 100 },
+    { task: "Coin", requirement: itemData["Wooden hut"]!.getExpense() * 100 },
   ]),
   Cottage: new CoinRequirement([
-    { requirement: itemData["Cottage"]!.getExpense() * 100 },
+    { task: "Coin", requirement: itemData["Cottage"]!.getExpense() * 100 },
   ]),
   House: new CoinRequirement([
-    { requirement: itemData["House"]!.getExpense() * 100 },
+    { task: "Coin", requirement: itemData["House"]!.getExpense() * 100 },
   ]),
   "Large house": new CoinRequirement([
-    { requirement: itemData["Large house"]!.getExpense() * 100 },
+    { task: "Coin", requirement: itemData["Large house"]!.getExpense() * 100 },
   ]),
   "Small palace": new CoinRequirement([
-    { requirement: itemData["Small palace"]!.getExpense() * 100 },
+    { task: "Coin", requirement: itemData["Small palace"]!.getExpense() * 100 },
   ]),
   "Grand palace": new CoinRequirement([
-    { requirement: itemData["Grand palace"]!.getExpense() * 100 },
+    { task: "Coin", requirement: itemData["Grand palace"]!.getExpense() * 100 },
   ]),
 
   //Misc
-  Book: new CoinRequirement([{ requirement: 0 }]),
+  Book: new CoinRequirement([{ task: "Coin", requirement: 0 }]),
   Dumbbells: new CoinRequirement([
-    { requirement: itemData["Dumbbells"]!.getExpense() * 100 },
+    { task: "Coin", requirement: itemData["Dumbbells"]!.getExpense() * 100 },
   ]),
   "Personal squire": new CoinRequirement([
-    { requirement: itemData["Personal squire"]!.getExpense() * 100 },
+    {
+      task: "Coin",
+      requirement: itemData["Personal squire"]!.getExpense() * 100,
+    },
   ]),
   "Steel longsword": new CoinRequirement([
-    { requirement: itemData["Steel longsword"]!.getExpense() * 100 },
+    {
+      task: "Coin",
+      requirement: itemData["Steel longsword"]!.getExpense() * 100,
+    },
   ]),
   Butler: new CoinRequirement([
-    { requirement: itemData["Butler"]!.getExpense() * 100 },
+    { task: "Coin", requirement: itemData["Butler"]!.getExpense() * 100 },
   ]),
   "Sapphire charm": new CoinRequirement([
-    { requirement: itemData["Sapphire charm"]!.getExpense() * 100 },
+    {
+      task: "Coin",
+      requirement: itemData["Sapphire charm"]!.getExpense() * 100,
+    },
   ]),
   "Study desk": new CoinRequirement([
-    { requirement: itemData["Study desk"]!.getExpense() * 100 },
+    { task: "Coin", requirement: itemData["Study desk"]!.getExpense() * 100 },
   ]),
   Library: new CoinRequirement([
-    { requirement: itemData["Library"]!.getExpense() * 100 },
+    { task: "Coin", requirement: itemData["Library"]!.getExpense() * 100 },
   ]),
 };
+
+for (const [key, value] of Object.entries(baseRequirements)) {
+  requirementData[key] = value;
+}
 
 function useJobData(initialData: Record<string, Job>) {
   const job = useRef(initialData);
@@ -847,10 +873,19 @@ function useItemData(initialData: Record<string, Item>) {
   return item.current;
 }
 
-function useRequirements() {
-  const req = useRef(requirements);
+function useRequirements(
+  initialData: Record<
+    string,
+    | CoinRequirement
+    | AgeRequirement
+    | EvilRequirement
+    | TaskRequirement
+    | Requirement
+  >,
+) {
+  const req = useRef(initialData);
   if (!req.current) {
-    req.current = requirements;
+    req.current = initialData;
   }
   return req.current;
 }
@@ -858,4 +893,5 @@ function useRequirements() {
 export { jobData, jobCategories, useJobData };
 export { skillData, skillCategories, useSkillData };
 export { itemData, itemCategories, useItemData };
+export { requirementData, useRequirements };
 export { headerRowColors, tooltips };
